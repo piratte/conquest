@@ -3,6 +3,7 @@ of each round. Just add your own bots as per usual.
 
 See compileAndRun.sh for example of compiling and running.
 
+![alt tag](https://github.com/skylogic004/conquest-engine-gui/raw/master/screenshot.png)
 ------------------------------------------------------------
 
 Compile as follows:
