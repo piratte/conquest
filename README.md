@@ -13,6 +13,7 @@ Windows (from cmd):
     md classes
     javac -d classes @sources.txt
     del sources.txt
+	copy images/* classes/
 
 Linux:
 
@@ -21,6 +22,7 @@ Linux:
     mkdir classes
     javac -d classes @sources.txt
     rm sources.txt
+	cp images/* classes/
 
 Then to run:
 
