@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Collections;
 
+import view.GUI;
 import move.AttackTransferMove;
 import move.Move;
 import move.MoveQueue;
@@ -41,9 +42,11 @@ public class Engine {
 	private LinkedList<Move> opponentMovesPlayer1;
 	private LinkedList<Move> opponentMovesPlayer2;
 	private MoveQueue moveQueue;
+	private GUI gui;
 
-	public Engine(Map initMap, Player player1, Player player2)
+	public Engine(Map initMap, Player player1, Player player2, GUI gui)
 	{
+		this.gui = gui;
 		this.map = initMap;
 		this.player1 = player1;
 		this.player2 = player2;
@@ -70,6 +73,8 @@ public class Engine {
 		getMoves(player2.getBot().getAttackTransferMoves(2000), player2);
 		
 		executeAttackTransfer();
+		
+		this.gui.updateAfterRound(roundNr, map);
 		
 		moveQueue.clear();
 		recalculateStartingArmies();

@@ -1,10 +1,11 @@
-For local use, change the following in RunGame.java
- * remove org.bson and com.mongodb imports
- * remove DB db
- * in go(), remove the path ending with .sh from both new IORobot() declarations
- * remove everything in saveGame(), you can add your own code here to print the winner for example
+This project adds an interactive visual map to see the outcome
+of each round. Just add your own bots as per usual.
 
-Then compile as follows:
+See compileAndRun.sh for example of compiling and running.
+
+------------------------------------------------------------
+
+Compile as follows:
 Windows (from cmd):
 
     [go to the directory containing the .java files]
