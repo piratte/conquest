@@ -4,3 +4,5 @@ BotStarterJim.java
 .project
 .classpath
 classes/
+.metadata
+/Conquest/bin

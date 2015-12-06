@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.net.URL;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -14,12 +15,11 @@ import javax.swing.SwingUtilities;
 
 import main.Map;
 import main.Region;
-import view.RegionInfo;
 
 public class GUI extends JFrame implements MouseListener
 {
 	private static final long serialVersionUID = 2116436198852146401L;
-	private static final String IMAGE_FILE = "conquest-map.jpg";
+	private static final String RESOURCE_IMAGE_FILE = "resources/images/conquest-map.jpg";
 	private static final int WIDTH = 1239;
 	private static final int HEIGHT = 664;
 	
@@ -44,7 +44,8 @@ public class GUI extends JFrame implements MouseListener
         //Map image
 		JLabel labelForImage = new JLabel();
 		labelForImage.setBounds(0, 0, WIDTH, HEIGHT);
-		ImageIcon icon = new ImageIcon(IMAGE_FILE);
+		URL iconURL = this.getClass().getResource(RESOURCE_IMAGE_FILE);
+		ImageIcon icon = new ImageIcon(iconURL);
 		labelForImage.setIcon(icon);
 		mainLayer.add(labelForImage, JLayeredPane.DEFAULT_LAYER);
 

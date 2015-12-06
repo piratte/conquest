@@ -65,6 +65,9 @@ public class RunGame
 
 	public static void main(String args[]) throws Exception
 	{	
+		// TEST ARGUMENTS
+		args = new String[] {"0", "0", "0", "java bot.BotStarter", "java bot.BotStarter" };
+		
 		RunGame run = new RunGame(args);
 		run.go();
 	}
