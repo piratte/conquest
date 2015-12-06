@@ -36,5 +36,16 @@ public interface Robot {
 	public void writeInfo(String info);
 
 	public void addToDump(String dumpy);
+	
+	/**
+	 * Whether this robot is up and running correctly...
+	 * @return
+	 */
+	public boolean isRunning();
+	
+	/**
+	 * Kills the robot.
+	 */
+	public void finish();
 
 }

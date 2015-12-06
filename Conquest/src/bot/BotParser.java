@@ -17,33 +17,76 @@
 
 package bot;
 
+import java.io.InputStream;
+import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 import main.Region;
-import move.PlaceArmiesMove;
 import move.AttackTransferMove;
+import move.PlaceArmiesMove;
 
-public class BotParser {
+public class BotParser implements Runnable {
 	
-	final Scanner scan;
+	final Scanner input;	
+
+	final PrintStream output;
 	
-	final Bot bot;
+	final Bot bot;	
 	
 	BotState currentState;
 	
-	public BotParser(Bot bot)
+	public BotParser(Bot bot) {
+		this(bot, System.in, System.out);
+	}
+	
+	public BotParser(Bot bot, InputStream input, PrintStream output)
 	{
-		this.scan = new Scanner(System.in);
+		this.input = new Scanner(input);
+		this.output = output;
+		
 		this.bot = bot;
 		this.currentState = new BotState();
 	}
 	
+	public static Thread runInternal(String playerName, String botFQCN, InputStream input, PrintStream output) {
+		Class botClass;
+		try {
+			botClass = Class.forName(botFQCN);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException("Failed to locate bot class: " + botFQCN, e);
+		}
+		return runInternal(playerName, botClass, input, output);
+	}
+	
+	public static Thread runInternal(String playerName, Class botClass, InputStream input, PrintStream output) {
+		Object botObj;
+		try {
+			botObj = botClass.getConstructor().newInstance();
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to construct Bot instance, tried to invoke parameterless constructor from class: " + botClass.getName()); 
+		}
+		if (!(Bot.class.isAssignableFrom(botObj.getClass()))) {
+			throw new RuntimeException("Constructed bot does not implement " + Bot.class.getName() + " interface, bot class instantiated: " + botClass.getName());
+		}
+		Bot bot = (Bot) botObj;
+		return runInternal(playerName, bot, input, output);
+	}
+	
+	public static Thread runInternal(String playerName, Bot bot, InputStream input, PrintStream output) {
+		BotParser parser = new BotParser(bot, input, output);
+		Thread botThread = new Thread(parser, playerName + "-Bot");
+		botThread.start();
+		return botThread;
+	}
+	
+	@Override
 	public void run()
 	{
-		while(scan.hasNextLine())
+		while(input.hasNextLine())
 		{
-			String line = scan.nextLine().trim();
+			String line = input.nextLine().trim();
 			if(line.length() == 0) { continue; }
 			String[] parts = line.split(" ");
 			if(parts[0].equals("pick_starting_regions")) {

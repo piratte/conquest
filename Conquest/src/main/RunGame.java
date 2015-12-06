@@ -17,7 +17,6 @@
 
 package main;
 
-import io.IORobot;
 
 import java.awt.Point;
 import java.io.*;
@@ -25,6 +24,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 import javax.swing.SwingUtilities;
+
+import robot.InternalRobot;
+import robot.ProcessRobot;
 
 import view.GUI;
 
@@ -57,7 +59,7 @@ public class RunGame
 	String playerName1, playerName2;
 	final String gameId,
 			bot1Id, bot2Id,
-			bot1Dir, bot2Dir;
+			bot1Init, bot2Init;
 
 	Engine engine;
 
@@ -66,7 +68,8 @@ public class RunGame
 	public static void main(String args[]) throws Exception
 	{	
 		// TEST ARGUMENTS
-		args = new String[] {"0", "0", "0", "java bot.BotStarter", "java bot.BotStarter" };
+		//args = new String[] {"0", "0", "0", "process:java bot.BotStarter", "process:java bot.BotStarter" };
+		args = new String[] {"0", "0", "0", "internal:bot.BotStarter", "internal:bot.BotStarter" };
 		
 		RunGame run = new RunGame(args);
 		run.go();
@@ -77,10 +80,10 @@ public class RunGame
 		this.gameId = args[0];
 		this.bot1Id = args[1];
 		this.bot2Id = args[2];
-		this.bot1Dir = args[3];
-		this.bot2Dir = args[4];
-		this.playerName1 = "player1";
-		this.playerName2 = "player2";
+		this.bot1Init = args[3];
+		this.bot2Init = args[4];
+		this.playerName1 = "PLR1";
+		this.playerName2 = "PLR2";
 	}
 
 	private void go() throws IOException, InterruptedException
@@ -89,18 +92,16 @@ public class RunGame
 		
 		Map initMap, map;
 		Player player1, player2;
-		IORobot bot1, bot2;
+		Robot robot1, robot2;
 		int startingArmies;
 
-//		db = new MongoClient("localhost", 27017).getDB("test");
+		//setup the bots: bot1, bot2
+		robot1 = setupRobot(playerName1, bot1Init);
+		robot2 = setupRobot(playerName2, bot2Init);
 		
-		//setup the bots
-		bot1 = new IORobot(bot1Dir);
-		bot2 = new IORobot(bot2Dir);
-
 		startingArmies = 5;
-		player1 = new Player(playerName1, bot1, startingArmies);
-		player2 = new Player(playerName2, bot2, startingArmies);
+		player1 = new Player(playerName1, robot1, startingArmies);
+		player2 = new Player(playerName2, robot2, startingArmies);
 
 		//setup the map
 		initMap = makeInitMap();
@@ -113,10 +114,10 @@ public class RunGame
 		this.engine = new Engine(map, player1, player2, gui);
 		
 		//send the bots the info they need to start
-		bot1.writeInfo("settings your_bot " + player1.getName());
-		bot1.writeInfo("settings opponent_bot " + player2.getName());
-		bot2.writeInfo("settings your_bot " + player2.getName());
-		bot2.writeInfo("settings opponent_bot " + player1.getName());
+		robot1.writeInfo("settings your_bot " + player1.getName());
+		robot1.writeInfo("settings opponent_bot " + player2.getName());
+		robot2.writeInfo("settings your_bot " + player2.getName());
+		robot2.writeInfo("settings opponent_bot " + player1.getName());
 		sendSetupMapInfo(player1.getBot(), initMap);
 		sendSetupMapInfo(player2.getBot(), initMap);
 		this.engine.distributeStartingRegions(); //decide the player's starting regions
@@ -126,8 +127,8 @@ public class RunGame
 		//play the game
 		while(this.engine.winningPlayer() == null && this.engine.getRoundNr() <= 100)
 		{
-			bot1.addToDump("Round " + this.engine.getRoundNr() + "\n");
-			bot2.addToDump("Round " + this.engine.getRoundNr() + "\n");
+			robot1.addToDump("Round " + this.engine.getRoundNr() + "\n");
+			robot2.addToDump("Round " + this.engine.getRoundNr() + "\n");
 			this.engine.playRound();
 		}
 
@@ -135,16 +136,34 @@ public class RunGame
 		player1PlayedGame = this.engine.getPlayer1PlayedGame();
 		player2PlayedGame = this.engine.getPlayer2PlayedGame();
 
-		finish(bot1, bot2);
+		finish(robot1, robot2);
+	}
+
+	private Robot setupRobot(String playerName, String botInit) throws IOException {
+		if (botInit.startsWith("process:")) {
+			String cmd = botInit.substring(8);
+			return new ProcessRobot(playerName, cmd);
+		}
+		if (botInit.startsWith("internal:")) {
+			String botFQCN = botInit.substring(9);
+			return new InternalRobot(playerName, botFQCN);
+		}
+		throw new RuntimeException("Invalid init string for player '" + playerName + "', must start either with 'process:' or 'internal:' passed value was: " + botInit);
 	}
 
 	//aanpassen en een QPlayer class maken? met eigen finish
-	private void finish(IORobot bot1, IORobot bot2) throws InterruptedException
+	private void finish(Robot bot1, Robot bot2) throws InterruptedException
 	{
-		bot1.finish();
+		try {
+			bot1.finish();
+		} catch (Exception e) {			
+		}
 		Thread.sleep(200);
 
-		bot2.finish();
+		try {
+			bot2.finish();
+		} catch (Exception e) {			
+		}
 		Thread.sleep(200);
 
 		Thread.sleep(200);
@@ -474,7 +493,7 @@ public class RunGame
 	 * MongoDB connection functions
 	 */
 
-	public void saveGame(IORobot bot1, IORobot bot2) {
+	public void saveGame(Robot bot1, Robot bot2) {
 		Player winner = this.engine.winningPlayer();
 
 		//can do stuff here optionally:

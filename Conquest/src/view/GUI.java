@@ -125,7 +125,6 @@ public class GUI extends JFrame implements MouseListener
 		p2.setText("p2");
 		mainLayer.add(p2, JLayeredPane.PALETTE_LAYER);
 		
-
 		//Finish
         this.pack();
         this.setSize(WIDTH, HEIGHT);
