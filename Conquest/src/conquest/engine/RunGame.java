@@ -599,26 +599,26 @@ public class RunGame
 		//args = new String[] {"0", "0", "0", "internal:bot.BotStarter", "internal:bot.BotStarter" };
 		//args = new String[] {"0", "0", "0", "process:java bot.BotStarter", "internal:bot.BotStarter" };
 		
-//		Config config = new Config();
-//		
-//		config.bot1Init = "internal:conquest.bot.BotStarter";
-//		config.bot2Init = "internal:conquest.bot.BotStarter";
-//		
-//		config.engine.botCommandTimeoutMillis = 24*60*60*1000;
-//		
-//		config.visualize = true;
-//		
-//		config.replayLog = new File("./replay.log");
-//		
-//		RunGame run = new RunGame(config);
-//		GameResult result = run.go();
-		
 		Config config = new Config();
+		
+		config.bot1Init = "internal:conquest.bot.BotStarter";
+		config.bot2Init = "internal:conquest.bot.BotStarter";
+		
+		config.engine.botCommandTimeoutMillis = 24*60*60*1000;
 		
 		config.visualize = true;
 		
+		config.replayLog = new File("./replay.log");
+		
 		RunGame run = new RunGame(config);
-		run.goReplay(new File("./replay.log"));
+		GameResult result = run.go();
+		
+//		Config config = new Config();
+//		
+//		config.visualize = true;
+//		
+//		RunGame run = new RunGame(config);
+//		run.goReplay(new File("./replay.log"));
 		
 		System.exit(0);
 	}
