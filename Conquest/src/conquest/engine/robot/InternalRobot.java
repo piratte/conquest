@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import conquest.bot.BotParser;
 import conquest.engine.Robot;
 import conquest.engine.io.InputOutputStream;
+import conquest.engine.replay.GameLog;
 import conquest.game.RegionData;
 import conquest.game.move.Move;
 
@@ -30,6 +31,11 @@ public class InternalRobot implements Robot {
 		bot = BotParser.runInternal(playerName, botFQCN, botInput.getInputStream(), new PrintStream(botOutput.getOutputStream()));
 		
 		robot = new IORobot(playerName, botInput.getOutputStream(), true, botOutput.getInputStream(), null);				
+	}
+	
+	@Override
+	public void setGameLog(GameLog gameLog, String playerName) {
+		robot.setGameLog(gameLog, playerName);
 	}
 
 	@Override
@@ -66,10 +72,6 @@ public class InternalRobot implements Robot {
 		robot.writeInfo(info);
 	}
 
-	public void addToDump(String dumpy){
-		robot.addToDump(dumpy);
-	}
-	
 	public boolean isRunning() {
 		if (robot == null || bot == null) return false;
 		synchronized(mutex) {
@@ -104,22 +106,6 @@ public class InternalRobot implements Robot {
 			}
 			robot = null;
 		}		
-	}
-	
-	public String getStdin() {
-		return robot.getIn();
-	}
-	
-	public String getStdout() {
-		return robot.getOut();
-	}
-	
-	public String getStderr() {
-		return robot.getErr();
-	}
-
-	public String getDump() {
-		return robot.getDump();
 	}
 
 }

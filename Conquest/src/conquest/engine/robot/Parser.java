@@ -15,7 +15,7 @@
 //    For the full copyright and license information, please view the LICENSE
 //    file that was distributed with this source code.
 
-package conquest.engine;
+package conquest.engine.robot;
 
 import java.util.ArrayList;
 
@@ -50,7 +50,7 @@ public class Parser {
 			for(int i=0; i<split.length; i++)
 			{
 				if(i > 50){
-					player.getBot().addToDump("Maximum number of moves reached, max 50 moves are allowed");
+					//player.getBot().addToDump("Maximum number of moves reached, max 50 moves are allowed");
 					break;
 				}
 				Move move = parseMove(split[i], player);
@@ -59,7 +59,7 @@ public class Parser {
 			}
 		}
 		catch(Exception e) {
-			player.getBot().addToDump("Move input is null");
+			//player.getBot().addToDump("Move input is null");
 		}
 		return moves;
 	}
@@ -161,14 +161,14 @@ public class Parser {
 			return preferredStartingRegions;
 		}
 		catch(Exception e) {
-			player.getBot().addToDump("Preferred starting regions input is null");
+			//player.getBot().addToDump("Preferred starting regions input is null");
 			return null;
 		}
 	}
 
 	private void errorOut(String error, String input, Player player)
 	{
-		player.getBot().addToDump("Parse error: " + error + " (" + input + ")");
+		//player.getBot().addToDump("Parse error: " + error + " (" + input + ")");
 	}
 
 }

@@ -7,6 +7,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BoxLayout;
@@ -337,8 +338,24 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 		waitForClick();
 	}
 
+	List<RegionData> pickableRegions = null;
+	
+	public void pickableRegions(List<RegionData> pickableRegions) {
+		actionTxt.setText("PICKABLE REGIONS");
+		
+		for (RegionData regionData : pickableRegions) {
+			int id = regionData.getId();
+			RegionInfo region = this.regions[id-1];
+			region.setHighlight();
+		}
+		
+		this.pickableRegions = pickableRegions;
+		
+		waitForClick();
+	}
+	
 	public void firstPlaceArmies(List<PlaceArmiesMove> placeArmiesMoves) {
-		actionTxt.setText("CHOOSE REGIONS");
+		actionTxt.setText("CHOSEN REGIONS");
 		
 		for (PlaceArmiesMove move : placeArmiesMoves) {
 			int id = move.getRegion().getId();
@@ -358,6 +375,12 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 			region.setArmies(region.getArmies() + region.armiesPlus);
 			region.armiesPlus = 0;
 			region.setText("" + region.getArmies());
+			region.setTeamColor();
+		}
+		
+		for (RegionData regionData : pickableRegions) {
+			int id = regionData.getId();
+			RegionInfo region = this.regions[id-1];
 			region.setTeamColor();
 		}
 		
@@ -389,9 +412,7 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 		actionTxt.setText("---");
 		
 		updateStats();
-	}
-	
-	
+	}	
 
 	public void transfer(AttackTransferMove move) {
 		actionTxt.setText("TRANSFER BY " + move.getPlayerName());
@@ -473,7 +494,7 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 		actionTxt.setText("---");	
 		
 		updateStats();
-	}
+	}	
 	
 } 
 

@@ -19,27 +19,28 @@ package conquest.engine;
 
 
 import java.awt.Point;
-import java.io.FileOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.zip.GZIPOutputStream;
 
+import conquest.engine.Engine.EngineConfig;
+import conquest.engine.replay.FileGameLog;
+import conquest.engine.replay.GameLog;
+import conquest.engine.replay.ReplayHandler;
+import conquest.engine.robot.IORobot;
 import conquest.engine.robot.InternalRobot;
 import conquest.engine.robot.ProcessRobot;
+import conquest.game.ContinentData;
 import conquest.game.GameMap;
 import conquest.game.Player;
 import conquest.game.RegionData;
-import conquest.game.ContinentData;
-import conquest.game.move.AttackTransferMove;
 import conquest.game.move.MoveResult;
-import conquest.game.move.PlaceArmiesMove;
-import conquest.game.world.Region;
 import conquest.game.world.Continent;
+import conquest.game.world.Region;
 import conquest.view.GUI;
 
 
@@ -59,14 +60,6 @@ public class RunGame
 	
 	public static class Config {
 		
-		/**
-		 * Non-negative seed => use concrete seed.
-		 * Negative seed => pick random seed.
-		 */
-		public int seed = -1;
-		
-		public boolean fullyObservableGame = true;
-		
 		public String gameId = "GAME";
 		
 		public String playerName1 = "PLR1";
@@ -78,12 +71,80 @@ public class RunGame
 		public String bot1Init;
 		public String bot2Init;
 		
-		public long botCommandTimeoutMillis = 2000;
-		
 		public boolean visualize = true;
 		
-		public int startingArmies = 5;
-		public int maxGameRounds = 500;
+		public File replayLog = null;
+		
+		public EngineConfig engine = new EngineConfig();
+		
+		public String asString() {
+			return gameId + ";" + playerName1 + ";" + playerName2 + ";" + bot1Id + ";" + bot2Id + ";" + visualize + ";" + engine.asString();
+		}
+		
+		public static Config fromString(String line) {
+			
+			String[] parts = line.split(";");
+			
+			Config result = new Config();
+
+			result.gameId = parts[0];
+			result.playerName1 = parts[1];
+			result.playerName2 = parts[2];
+			result.bot1Id = parts[3];
+			result.bot2Id = parts[4];
+			result.visualize = Boolean.parseBoolean(parts[5]);
+			
+			int engineConfigStart = 0;
+			for (int i = 0; i < 6; ++i) {
+				engineConfigStart = line.indexOf(";", engineConfigStart);
+				++engineConfigStart;
+			}
+			
+			result.engine = EngineConfig.fromString(line.substring(engineConfigStart));
+			
+			return result;
+		}
+		
+	}
+	
+	public static class GameResult {
+		
+		public Config config;
+		
+		public int player1Regions;
+		public int player1Armies;
+		
+		public int player2Regions;
+		public int player2Armies;
+		
+		/**
+		 * 0 -> none
+		 * 1 -> player 1
+		 * 2 -> player 2
+		 */
+		public int winner = 0;
+		
+		/**
+		 * Number of the round the game ended.
+		 */
+		public int round;
+
+		public String getWinner() {
+			switch (winner) {
+			case 0: return "NONE";
+			case 1: return config == null ? "Player1" : config.playerName1;
+			case 2: return config == null ? "Player2" : config.playerName2;
+			}
+			return null;
+		}
+
+		public String asString() {
+			return getWinner() + ";" + player1Regions + ";" + player1Armies + ";" + player2Regions + ";" + player2Armies + ";" + round;
+		}
+		
+		public String getHumanString() {
+			return "Winner: " + getWinner() + " [Round: " + round + "]\nPlayer1: " + player1Regions + " regions / " + player1Armies + " armies\nPlayer2: " + player2Regions + " regions / " + player2Armies + " armies";
+		}
 		
 	}
 	
@@ -100,12 +161,36 @@ public class RunGame
 	{
 		this.config = config;		
 	}
+	
+	public GameResult goReplay(File replayFile) throws IOException, InterruptedException {
+		System.out.println("starting replay " + replayFile.getAbsolutePath());
+		
+		ReplayHandler replay = new ReplayHandler(replayFile);
+		
+		this.config.engine = replay.getConfig().engine;
+		
+		Player player1, player2;
+		Robot robot1, robot2;
+		
+		//setup the bots: bot1, bot2
+		robot1 = new IORobot(replay);
+		robot2 = new IORobot(replay);
+				
+		player1 = new Player(config.playerName1, robot1, config.engine.startingArmies);
+		player2 = new Player(config.playerName2, robot2, config.engine.startingArmies);
+		
+		return go(null, player1, player2, robot1, robot2);
+	}
 
-	private void go() throws IOException, InterruptedException
+	public GameResult go() throws IOException, InterruptedException
 	{
+		GameLog log = null;
+		if (config.replayLog != null) {
+			log = new FileGameLog(config.replayLog);
+		}
+		
 		System.out.println("starting game " + config.gameId);
 		
-		GameMap initMap, map;
 		Player player1, player2;
 		Robot robot1, robot2;
 		
@@ -113,10 +198,22 @@ public class RunGame
 		robot1 = setupRobot(config.playerName1, config.bot1Init);
 		robot2 = setupRobot(config.playerName2, config.bot2Init);
 				
-		player1 = new Player(config.playerName1, robot1, config.startingArmies);
-		player2 = new Player(config.playerName2, robot2, config.startingArmies);
+		player1 = new Player(config.playerName1, robot1, config.engine.startingArmies);
+		player2 = new Player(config.playerName2, robot2, config.engine.startingArmies);
+		
+		if (log != null) {
+			robot1.setGameLog(log, config.playerName1);
+			robot2.setGameLog(log, config.playerName2);
+		}
+		
+		return go(log, player1, player2, robot1, robot2);
+	}
 
+	private GameResult go(GameLog log, Player player1, Player player2, Robot robot1, Robot robot2) throws InterruptedException {
+		
 		//setup the map
+		GameMap initMap, map;
+		
 		initMap = makeInitMap();
 		map = setupMap(initMap);
 
@@ -127,7 +224,11 @@ public class RunGame
 		}
 		
 		//start the engine
-		this.engine = new Engine(map, player1, player2, gui, config.fullyObservableGame, config.botCommandTimeoutMillis, config.seed);
+		this.engine = new Engine(map, player1, player2, gui, config.engine);
+		
+		if (log != null) {
+			log.start(config);
+		}
 		
 		//send the bots the info they need to start
 		robot1.writeInfo("settings your_bot " + player1.getName());
@@ -141,10 +242,10 @@ public class RunGame
 		this.engine.sendAllInfo();
 		
 		//play the game
-		while(this.engine.winningPlayer() == null && this.engine.getRoundNr() <= config.maxGameRounds)
+		while(this.engine.winningPlayer() == null && this.engine.getRoundNr() <= config.engine.maxGameRounds)
 		{
-			robot1.addToDump("Round " + this.engine.getRoundNr() + "\n");
-			robot2.addToDump("Round " + this.engine.getRoundNr() + "\n");
+//			robot1.addToDump("Round " + this.engine.getRoundNr() + "\n");
+//			robot2.addToDump("Round " + this.engine.getRoundNr() + "\n");
 			this.engine.playRound();
 		}
 
@@ -152,7 +253,13 @@ public class RunGame
 		player1PlayedGame = this.engine.getPlayer1PlayedGame();
 		player2PlayedGame = this.engine.getPlayer2PlayedGame();
 
-		finish(robot1, robot2);
+		GameResult result = finish(map, robot1, robot2);
+		
+		if (log != null) {
+			log.finish(result);
+		}
+		
+		return result;
 	}
 
 	private Robot setupRobot(String playerName, String botInit) throws IOException {
@@ -168,7 +275,7 @@ public class RunGame
 	}
 
 	//aanpassen en een QPlayer class maken? met eigen finish
-	private void finish(Robot bot1, Robot bot2) throws InterruptedException
+	private GameResult finish(GameMap map, Robot bot1, Robot bot2) throws InterruptedException
 	{
 		try {
 			bot1.finish();
@@ -184,11 +291,7 @@ public class RunGame
 
 		Thread.sleep(200);
 
-		// write everything
-		// String outputFile = this.writeOutputFile(this.gameId, this.engine.winningPlayer());
-		this.saveGame(bot1, bot2);
-
-        System.exit(0);
+		return this.saveGame(map, bot1, bot2);        
 	}
 
 	//tijdelijk handmatig invoeren
@@ -454,89 +557,39 @@ public class RunGame
 		return true;
 	}
 
-	private String getPlayedGame(Player winner, String gameView)
-	{
-		StringBuffer out = new StringBuffer();
+	public GameResult saveGame(GameMap map, Robot bot1, Robot bot2) {
 
-		LinkedList<MoveResult> playedGame;
-		if(gameView.equals("player1"))
-			playedGame = player1PlayedGame;
-		else if(gameView.equals("player2"))
-			playedGame = player2PlayedGame;
-		else
-			playedGame = fullPlayedGame;
-			
-		playedGame.removeLast();
-		int roundNr = 2;
-		out.append("map " + playedGame.getFirst().getMap().getMapString() + "\n");
-		out.append("round 1" + "\n");
-		for(MoveResult moveResult : playedGame)
-		{
-			if(moveResult != null)
-			{
-				if(moveResult.getMove() != null)
-				{
-					try {
-						PlaceArmiesMove plm = (PlaceArmiesMove) moveResult.getMove();
-						out.append(plm.getString() + "\n");
-					}
-					catch(Exception e) {
-						AttackTransferMove atm = (AttackTransferMove) moveResult.getMove();
-						out.append(atm.getString() + "\n");
-					}
-				out.append("map " + moveResult.getMap().getMapString() + "\n");
-				}
+		GameResult result = new GameResult();
+		
+		result.config = config;
+		
+		for (RegionData region : map.regions) {
+			if (region.ownedByPlayer(config.playerName1)) {
+				++result.player1Regions;
+				result.player1Armies += region.getArmies();
 			}
-			else
-			{
-				out.append("round " + roundNr + "\n");
-				roundNr++;
+			if (region.ownedByPlayer(config.playerName2)) {
+				++result.player2Regions;
+				result.player2Armies += region.getArmies();
 			}
 		}
 		
-		if(winner != null)
-			out.append(winner.getName() + " won\n");
-		else
-			out.append("Nobody won\n");
-
-		return out.toString();
-	}
-
-	private String compressGZip(String data, String outFile)
-	{
-		try {
-			FileOutputStream fos = new FileOutputStream(outFile);
-			GZIPOutputStream gzos = new GZIPOutputStream(fos);
-
-			byte[] outBytes = data.getBytes("UTF-8");
-			gzos.write(outBytes, 0, outBytes.length);
-
-			gzos.finish();
-			gzos.close();
-
-			return outFile;
-		}
-		catch(IOException e) {
-			System.out.println(e);
-			return "";
-		}
-	}
-
-	/*
-	 * MongoDB connection functions
-	 */
-
-	public void saveGame(Robot bot1, Robot bot2) {
-		Player winner = this.engine.winningPlayer();
-
-		//can do stuff here optionally:
-		
-		if (winner == null) {
-			System.out.println("WINNER: NULL");
+		if (engine.winningPlayer() != null) {
+			if (config.playerName1.equals(engine.winningPlayer().getName())) {
+				result.winner = 1;
+			} else
+			if (config.playerName2.equals(engine.winningPlayer().getName())) {
+				result.winner = 2;
+			}
 		} else {
-			int score = this.engine.getRoundNr() - 1;
-			System.out.println("WINNER: " + winner.getName() + " " + score);
+			result.winner = 0;
 		}
+		
+		result.round = engine.getRoundNr()-1;
+		
+		System.out.println(result.getHumanString());
+		
+		return result;
 	}
 	
 	public static void main(String args[]) throws Exception
@@ -546,17 +599,28 @@ public class RunGame
 		//args = new String[] {"0", "0", "0", "internal:bot.BotStarter", "internal:bot.BotStarter" };
 		//args = new String[] {"0", "0", "0", "process:java bot.BotStarter", "internal:bot.BotStarter" };
 		
+//		Config config = new Config();
+//		
+//		config.bot1Init = "internal:conquest.bot.BotStarter";
+//		config.bot2Init = "internal:conquest.bot.BotStarter";
+//		
+//		config.engine.botCommandTimeoutMillis = 24*60*60*1000;
+//		
+//		config.visualize = true;
+//		
+//		config.replayLog = new File("./replay.log");
+//		
+//		RunGame run = new RunGame(config);
+//		GameResult result = run.go();
+		
 		Config config = new Config();
-		
-		config.bot1Init = "internal:conquest.bot.BotStarter";
-		config.bot2Init = "internal:conquest.bot.BotStarter";
-		
-		config.botCommandTimeoutMillis = 24*60*60*1000;
 		
 		config.visualize = true;
 		
 		RunGame run = new RunGame(config);
-		run.go();
+		run.goReplay(new File("./replay.log"));
+		
+		System.exit(0);
 	}
 	
 

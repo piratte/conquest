@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import conquest.engine.replay.GameLog;
+
 public class Handler implements IHandler {
 	
 	String name;
@@ -29,6 +31,10 @@ public class Handler implements IHandler {
 	
 	InStream out, err;
 	OutStream in;
+
+	private GameLog log = null;
+
+	private String logPlayerName;
 	
 	public Handler(String handlerName, OutputStream input, boolean inputAutoFlush, InputStream output, InputStream error) throws IOException
 	{
@@ -49,6 +55,11 @@ public class Handler implements IHandler {
 		if (err != null) {
 			err.start();
 		}
+	}
+	
+	public void setGameLog(GameLog gameLog, String playerName) {
+		this.log = gameLog;
+		this.logPlayerName = playerName;
 	}
 	
 	public void stop()
@@ -78,6 +89,9 @@ public class Handler implements IHandler {
 		if (!isRunning()) { return null; }
 		try { in.flush(); } catch(IOException e) {}
 		String line = out.readLine(timeOut);
+		if (log != null) {
+			log.logBotToEngine(logPlayerName, line);
+		}
 		System.out.println(name + " <-- " + line);
 		return line;
 	}
@@ -86,6 +100,9 @@ public class Handler implements IHandler {
 	{
 		if(!isRunning()) { return false; }
 		try { 
+			if (log != null) {
+				log.logEngineToBot(logPlayerName, line);
+			}
 			System.out.println(name + " --> " + line);
 			in.writeLine(line.trim());			
 			return true;

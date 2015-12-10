@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import conquest.engine.Robot;
+import conquest.engine.replay.GameLog;
 import conquest.game.RegionData;
 import conquest.game.move.Move;
 
@@ -32,11 +33,22 @@ public class ProcessRobot implements Robot
 	Process child;
 	
 	IORobot robot;
+
+	private GameLog log;
+
+	private String logPlayerName;
 	
 	public ProcessRobot(String playerName, String command) throws IOException
 	{
 		child = Runtime.getRuntime().exec(command);
 		robot = new IORobot(playerName, child.getOutputStream(), false, child.getInputStream(), child.getErrorStream());
+	}
+	
+	@Override
+	public void setGameLog(GameLog gameLog, String playerName) {
+		this.log = gameLog;
+		this.logPlayerName = playerName;
+		robot.setGameLog(gameLog, playerName);
 	}
 	
 	@Override
@@ -71,10 +83,6 @@ public class ProcessRobot implements Robot
 	@Override
 	public void writeInfo(String info){
 		robot.writeInfo(info);
-	}
-
-	public void addToDump(String dumpy){
-		robot.addToDump(dumpy);
 	}
 	
 	public boolean isRunning() {
@@ -118,22 +126,6 @@ public class ProcessRobot implements Robot
 			}
 			child = null;
 		}
-	}
-	
-	public String getStdin() {
-		return robot.getIn();
-	}
-	
-	public String getStdout() {
-		return robot.getOut();
-	}
-	
-	public String getStderr() {
-		return robot.getErr();
-	}
-
-	public String getDump() {
-		return robot.getDump();
 	}
 
 }

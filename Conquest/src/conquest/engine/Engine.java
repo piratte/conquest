@@ -23,6 +23,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import conquest.engine.RunGame.Config;
+import conquest.engine.robot.Parser;
 import conquest.game.GameMap;
 import conquest.game.Player;
 import conquest.game.RegionData;
@@ -34,8 +36,42 @@ import conquest.game.move.MoveResult;
 import conquest.game.move.PlaceArmiesMove;
 import conquest.view.GUI;
 
-
 public class Engine {
+	
+	public static class EngineConfig {
+		
+		/**
+		 * Non-negative seed => use concrete seed.
+		 * Negative seed => pick random seed.
+		 */
+		public int seed = -1;
+		
+		public boolean fullyObservableGame = true;
+		
+		public long botCommandTimeoutMillis = 2000;
+		
+		public int startingArmies = 5;
+		public int maxGameRounds = 100;
+		
+		public String asString() {
+			return seed + ";" + fullyObservableGame + ";" + botCommandTimeoutMillis + ";" + startingArmies + ";" + maxGameRounds;
+		}
+		
+		public static EngineConfig fromString(String line) {
+			EngineConfig result = new EngineConfig();
+			
+			String[] parts = line.split(";");
+			
+			result.seed = Integer.parseInt(parts[0]);
+			result.fullyObservableGame = Boolean.parseBoolean(parts[1]);
+			result.botCommandTimeoutMillis = Long.parseLong(parts[2]);
+			result.startingArmies = Integer.parseInt(parts[3]);
+			result.maxGameRounds = Integer.parseInt(parts[4]);
+
+			return result;
+		}
+		
+	}
 	
 	private Player player1;
 	private Player player2;
@@ -55,24 +91,24 @@ public class Engine {
 	private int seed;
 	private boolean fullyObservableGame;
 
-	public Engine(GameMap initMap, Player player1, Player player2, GUI gui, boolean fullyObservableGame, long timeoutMillis, int seed)
+	public Engine(GameMap initMap, Player player1, Player player2, GUI gui, EngineConfig config)
 	{
-		if (seed < 0) {
-			seed = new Random().nextInt();
+		if (config.seed < 0) {
+			config.seed = new Random().nextInt();
 		}
-		while (seed < 0) seed += Integer.MAX_VALUE;
-		this.seed = seed;
+		while (config.seed < 0) config.seed += Integer.MAX_VALUE;
+		this.seed = config.seed;
 		this.random = new Random(this.seed);
 		
-		this.fullyObservableGame = fullyObservableGame;
+		this.fullyObservableGame = config.fullyObservableGame;
 		
 		this.gui = gui;
 		this.map = initMap;
 		this.player1 = player1;
 		this.player2 = player2;
-		this.timeoutMillis = timeoutMillis;		
+		this.timeoutMillis = config.botCommandTimeoutMillis;		
 		roundNr = 1;
-		moveQueue = new MoveQueue(player1, player2);
+		moveQueue = new MoveQueue(player1, player2, this.random);
 		
 		parser = new Parser(map);
 		
@@ -130,6 +166,10 @@ public class Engine {
 				}
 			}
 			regionsAdded = 0;
+		}
+		
+		if (gui != null) {
+			gui.pickableRegions(pickableRegions);
 		}
 		
 		//get the preferred starting regions from the players

@@ -19,11 +19,14 @@ package conquest.engine;
 
 import java.util.ArrayList;
 
+import conquest.engine.replay.GameLog;
 import conquest.game.RegionData;
 import conquest.game.move.Move;
 
 
 public interface Robot {
+	
+	public void setGameLog(GameLog gameLog, String playerName);
 	
 	public void setup(long timeOut);
 	
@@ -37,7 +40,7 @@ public interface Robot {
 	
 	public void writeInfo(String info);
 
-	public void addToDump(String dumpy);
+	//public void addToDump(String dumpy);
 	
 	/**
 	 * Whether this robot is up and running correctly...

@@ -17,6 +17,7 @@
 
 package conquest.game.move;
 import java.util.ArrayList;
+import java.util.Random;
 
 import conquest.game.Player;
 
@@ -28,16 +29,18 @@ public class MoveQueue {
 	public ArrayList<AttackTransferMove> attackTransferMovesP1;
 	public ArrayList<AttackTransferMove> attackTransferMovesP2;
 	private Player player1, player2;
+	private Random random;
 	// public final int ORDER_RANDOM = 1;
 	// public final int ORDER_CYCLIC = 2;
 	
-	public MoveQueue(Player player1, Player player2)
+	public MoveQueue(Player player1, Player player2, Random random)
 	{
 		this.placeArmiesMoves = new ArrayList<PlaceArmiesMove>();
 		this.attackTransferMovesP1 = new ArrayList<AttackTransferMove>();
 		this.attackTransferMovesP2 = new ArrayList<AttackTransferMove>();
 		this.player1 = player1;
 		this.player2 = player2;
+		this.random = random;
 	}
 	
 	public void addMove(Move move)
@@ -84,7 +87,7 @@ public class MoveQueue {
 		{
 			if(moveNr % 2 == 1 || previousMovePlayer.equals("")) //first move of the two
 			{
-				double rand = Math.random();
+				double rand = random.nextDouble();
 				return getMove(rand < 0.5);
 			}
 			else //it's the other player's turn

@@ -25,25 +25,41 @@ import java.util.ArrayList;
 
 import conquest.engine.Robot;
 import conquest.engine.io.handler.Handler;
+import conquest.engine.io.handler.IHandler;
+import conquest.engine.replay.GameLog;
 import conquest.game.RegionData;
 import conquest.game.move.Move;
 
 
 public class IORobot implements Robot
 {
-	Handler handler;
+	IHandler handler;
 	
-	StringBuilder dump;
-
 	int errorCounter;
 	
 	final int maxErrors = 2;
+
+	private GameLog log;
+
+	private String logPlayerName;
+	
+	public IORobot(IHandler handler) throws IOException
+	{
+		this.handler = handler;
+		errorCounter = 0;
+	}
 	
 	public IORobot(String playerName, OutputStream input, boolean inputAutoFlush, InputStream output, InputStream error) throws IOException
 	{
 		handler = new Handler(playerName + "-Robot", input, inputAutoFlush, output, error);
-		dump = new StringBuilder();
 		errorCounter = 0;
+	}
+	
+	@Override
+	public void setGameLog(GameLog gameLog, String playerName) {
+		this.log = gameLog;
+		this.logPlayerName = playerName;
+		handler.setGameLog(gameLog, playerName);
 	}
 	
 	@Override
@@ -64,8 +80,6 @@ public class IORobot implements Robot
 		
 		handler.writeLine(output);
 		String line = handler.readLine(timeOut);
-		dump.append(output + "\n");
-		dump.append(line + "\n");
 		return line;
 	}
 	
@@ -87,8 +101,6 @@ public class IORobot implements Robot
 		if(errorCounter < maxErrors)
 		{
 			handler.writeLine("go " + moveType + " " + timeOut);
-			dump.append("go " + moveType + " " + timeOut + "\n");
-			
 			
 			long timeStart = System.currentTimeMillis();
 			while(line != null && line.length() < 1)
@@ -96,7 +108,6 @@ public class IORobot implements Robot
 				long timeNow = System.currentTimeMillis();
 				long timeElapsed = timeNow - timeStart;
 				line = handler.readLine(timeOut);
-				dump.append(line + "\n");
 				if(timeElapsed >= timeOut)
 					break;
 			}
@@ -109,8 +120,10 @@ public class IORobot implements Robot
 		}
 		else
 		{
-			dump.append("go " + moveType + " " + timeOut + "\n");
-			dump.append("Maximum number of idle moves returned: skipping move (let bot return 'No moves' instead of nothing)");
+			if (log != null) {
+				log.logComment(logPlayerName, "go " + moveType + " " + timeOut + "\n");
+				log.logComment(logPlayerName, "Maximum number of idle moves returned: skipping move (let bot return 'No moves' instead of nothing)");
+			}
 		}
 		return line;
 	}
@@ -118,13 +131,8 @@ public class IORobot implements Robot
 	@Override
 	public void writeInfo(String info){
 		handler.writeLine(info);
-		dump.append(info + "\n");
 	}
 
-	public void addToDump(String dumpy){
-		dump.append(dumpy);
-	}
-	
 	public boolean isRunning() {
 		return handler.isRunning();
 	}
@@ -133,20 +141,4 @@ public class IORobot implements Robot
 		handler.stop();
 	}
 	
-	public String getIn() {
-		return handler.getIn();
-	}
-	
-	public String getOut() {
-		return handler.getOut();
-	}
-	
-	public String getErr() {
-		return handler.getErr();
-	}
-
-	public String getDump() {
-		return dump.toString();
-	}
-
 }
