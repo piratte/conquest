@@ -1,9 +1,8 @@
-This project adds an interactive visual map to see the outcome
-of each round.
-
-Heavily refactored (wrt. original Conquest codebase) ~ packages renamed, some name changes, etc., but protocol is still the same so it should work with original bots.
+Warlight AI Challenge engine (http://theaigames.com/competitions/warlight-ai-challenge) + interactive visual map + replays.
 
 Forked from: https://github.com/skylogic004/conquest-engine-gui
+
+Heavily refactored (wrt. original Conquest codebase) ~ packages renamed, some name changes, etc., but protocol is still the same so it should work with original bots.
 
 FEATURES
 
