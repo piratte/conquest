@@ -66,21 +66,21 @@ public class Handler implements IHandler {
 	{
 		try { in.close(); } catch(IOException e) {}
 
-		out.finish();
-		if (err != null) err.finish();
+		out.finish(200);
+		if (err != null) err.finish(200);
 		
 		if(out.isAlive())
 			out.interrupt();
+			
 		if (err != null) 
 			if(err.isAlive())
 				err.interrupt();
 		
 		try {
-			out.join(110);
-			if (err != null) err.join(110);
+			out.join(200);
+			if (err != null) err.join(200);
 		}
 		catch(InterruptedException e) {
-			e.printStackTrace();
 		}
 	}
 	

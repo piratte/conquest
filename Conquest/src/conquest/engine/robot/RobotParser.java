@@ -27,11 +27,11 @@ import conquest.game.move.Move;
 import conquest.game.move.PlaceArmiesMove;
 
 
-public class Parser {
+public class RobotParser {
 	
 	private GameMap map;
 	
-	public Parser(GameMap map)
+	public RobotParser(GameMap map)
 	{
 		this.map = map;
 	}

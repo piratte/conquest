@@ -1,0 +1,142 @@
+package conquest;
+
+import java.io.File;
+
+import conquest.engine.RunGame;
+import conquest.engine.RunGame.Config;
+import conquest.engine.RunGame.GameResult;
+
+public class Conquest {
+	
+	/**
+	 * Example how to start internal bots...
+	 */
+	public static void startInternalBots(boolean visualize) {
+		Config config = new Config();
+		
+		config.bot1Init = "internal:conquest.bot.BotStarter";
+		config.bot2Init = "internal:conquest.bot.BotStarter";
+				
+		config.visualize = visualize;
+		
+		config.replayLog = new File("./replay.log");
+		
+		RunGame run = new RunGame(config);
+		GameResult result = run.go();
+		
+		System.exit(0);
+	}
+	
+	/**
+	 * Example how to start bots "from command line"...
+	 */
+	public static void startProcessBots(boolean visualize) {
+		Config config = new Config();
+		
+		config.bot1Init = "process:java -cp bin conquest.bot.BotStarter";
+		config.bot2Init = "process:java -cp bin conquest.bot.BotStarter";
+				
+		config.visualize = visualize;
+		
+		config.replayLog = new File("./replay.log");
+		
+		RunGame run = new RunGame(config);
+		GameResult result = run.go();
+		
+		System.exit(0);
+	}
+	
+	/**
+	 * Example how to start bots "from command line"...
+	 */
+	public static void startReplay(String replayFile) {
+		Config config = new Config();
+		
+		config.visualize = true;
+		
+		RunGame run = new RunGame(config);
+		GameResult result = run.goReplay(new File(replayFile));
+		
+		System.exit(0);
+	}
+	
+	private static void header() {
+		System.out.println("---------------");
+		System.out.println("CONQUEST ENGINE");
+		System.out.println("---------------");
+	}
+	
+	private static void error() {		
+		System.out.println();
+		System.out.println("Invalid arguments passed. Expected 1, 5 or 6 arguemnts");
+		System.out.println();
+		System.out.println("To start the game (5 or 6 arguments):");
+		System.out.println("java ... conquest.Conquest <max rounds:int> <bot command timeout:long> <bot1:init string> <bot2:init string> <visualization:boolean> [ <replay file:string> ]");
+		System.out.println();
+		System.out.println("To replay the game (1 argument):");
+		System.out.println("java ... conquest.Conquest <replay file:string>");
+		System.out.println();		
+		System.exit(1);
+	}
+
+	public static void main(String[] args) {
+		
+		//
+		// TEST ARGUMENTS
+		// -- REPLAY
+		//args = new String[]{ "replay.log" };
+		
+		// -- TWO INTERNAL BOTS + visualization + logging replay
+		//args = new String[]{ "100", "5000", "internal:conquest.bot.BotStarter", "internal:conquest.bot.BotStarter", "true", "replay.log" };
+		
+		// -- TWO PROCESS BOTS + visualization + logging replay
+		//args = new String[]{ "100", "5000", "process:java -cp bin conquest.bot.BotStarter", "process:java -cp bin conquest.bot.BotStarter", "true", "replay.log" };
+		
+		if (args == null || (args.length != 1 && args.length != 5 && args.length != 6)) {
+			header();
+			error();
+		}
+		
+		if (args.length == 1) {
+			try {
+				startReplay(args[0]);
+			} catch (Exception e) {
+				header();
+				System.out.println();
+				e.printStackTrace();
+				error();
+			}
+		}
+		
+		if (args.length == 5 || args.length == 6) {
+			try {
+				Config config = new Config();
+				
+				config.engine.maxGameRounds = Integer.parseInt(args[0]);
+				config.engine.botCommandTimeoutMillis = Long.parseLong(args[1]);
+				
+				config.bot1Init = args[2];
+				config.bot2Init = args[3];
+				
+				config.visualize = Boolean.parseBoolean(args[4]);
+				
+				if (args.length == 6) {
+					config.replayLog = new File(args[5]);
+				}
+				
+				RunGame run = new RunGame(config);
+				GameResult result = run.go();
+				
+				System.exit(0);				
+			} catch (Exception e) {
+				header();
+				System.out.println();
+				e.printStackTrace();
+				error();
+			}
+		}
+		
+		
+	}
+	
+}

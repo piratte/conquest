@@ -28,7 +28,8 @@ public class BotStreamReader {
 				try {
 					Thread.sleep(20);
 				} catch (InterruptedException e) {
-					throw new RuntimeException("Interrupted on waiting for next line.");
+					// GAME ENDED;
+					return null;
 				}
 				continue;
 			}

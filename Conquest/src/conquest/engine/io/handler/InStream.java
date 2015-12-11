@@ -101,10 +101,15 @@ public class InStream extends Thread
 		}	
 	}
 	
-	public void finish()
+	public void finish(long timeoutMillis)
 	{
 		synchronized(stopping){
 			stopping = true;
+			interrupt();
+		}
+		try {
+			join(timeoutMillis);
+		} catch (InterruptedException e) {
 		}
 	}
 	

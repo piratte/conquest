@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Random;
 
 import conquest.engine.RunGame.Config;
-import conquest.engine.robot.Parser;
+import conquest.engine.robot.RobotParser;
 import conquest.game.GameMap;
 import conquest.game.Player;
 import conquest.game.RegionData;
@@ -76,7 +76,7 @@ public class Engine {
 	private Player player1;
 	private Player player2;
 	private GameMap map;
-	private Parser parser;
+	private RobotParser parser;
 	private int roundNr;
 	private LinkedList<MoveResult> fullPlayedGame;
 	private LinkedList<MoveResult> player1PlayedGame;
@@ -110,7 +110,7 @@ public class Engine {
 		roundNr = 1;
 		moveQueue = new MoveQueue(player1, player2, this.random);
 		
-		parser = new Parser(map);
+		parser = new RobotParser(map);
 		
 		fullPlayedGame = new LinkedList<MoveResult>();
 		player1PlayedGame = new LinkedList<MoveResult>();

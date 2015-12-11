@@ -37,6 +37,7 @@ public class ReplayHandler implements IHandler {
 			
 			while (true) {
 				String line = reader.readLine();
+				if (line.trim().length() == 0) continue;
 				if (line.equals(FileGameLog.REPLAY_END)) break;
 				log.add(LogLine.fromString(line));
 			}

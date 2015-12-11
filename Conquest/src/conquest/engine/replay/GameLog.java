@@ -84,7 +84,7 @@ public abstract class GameLog {
 	public abstract void finish(GameResult result);
 	
 	public void logComment(String who, String line) {
-		
+		log(new LogLine(who, line));
 	}
 	
 	public void logEngineToBot(String player, String line) {

@@ -17,6 +17,7 @@
 
 package conquest.bot;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 
@@ -131,6 +132,7 @@ public class BotStarter implements Bot
 	public static void main(String[] args)
 	{
 		BotParser parser = new BotParser(new BotStarter());
+		//parser.setLogFile(new File("./BotStarter.log"));
 		parser.run();
 	}
 

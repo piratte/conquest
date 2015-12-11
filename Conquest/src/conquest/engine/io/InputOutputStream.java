@@ -16,12 +16,9 @@ public class InputOutputStream {
 			try {
 				if (stream.isEmpty()) return -1;
 				int read = stream.take();
-//				if (read == 10) {
-//					System.out.println("HA");
-//				}
 				return read;
 			} catch (InterruptedException e) {
-				throw new IOException("Interrupted while waiting on the stream.take().");
+				throw new IOException("Interrupted while waiting on the stream.take().", e);
 			}
 		}
 		
@@ -34,7 +31,7 @@ public class InputOutputStream {
 			try {
 				stream.put(b);
 			} catch (InterruptedException e) {
-				throw new IOException("Interrupted while waiting on the stream.put(" + b + ").");
+				throw new IOException("Interrupted while waiting on the stream.put(" + b + ").", e);
 			}
 		}
 		

@@ -18,6 +18,7 @@
 package conquest.bot;
 
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
@@ -38,9 +39,16 @@ public class BotParser implements Runnable {
 	final Bot bot;	
 	
 	BotState currentState;
+
+	FileBotLog log;
 	
 	public BotParser(Bot bot) {
 		this(bot, System.in, System.out);
+	}
+	
+	public void setLogFile(File file) {
+		log = new FileBotLog(file);
+		log.start();
 	}
 	
 	public BotParser(Bot bot, InputStream input, PrintStream output)
@@ -83,18 +91,34 @@ public class BotParser implements Runnable {
 		return botThread;
 	}
 	
+	private void log(String msg) {
+		if (log != null) {
+			log.log(msg);
+		}
+	}
+	
 	@Override
 	public void run()
 	{
+		log("Bot thread started.");
 		while (true) {
 			String line;
+			log("Reading input...");
 			try {
 				line = input.readLine();
 			} catch (IOException e) {
+				log("FAILED TO READ NEXT LINE: " + e.getMessage());
+				if (log != null) {
+					log.finish();
+				}
 				throw new RuntimeException("Failed to read next line.", e);
 			}
 			if (line == null) {
-				System.err.println("End of INPUT stream reached...");
+				log("End of INPUT stream reached...");
+				log("Terminating the thread.");
+				if (log != null) {
+					log.finish();
+				}
 				return;
 			}
 			line = line.trim();
@@ -108,6 +132,7 @@ public class BotParser implements Runnable {
 				for(RegionData region : preferredStartingRegions)
 					output = output.concat(region.getId() + " ");
 				
+				log("OUT: " + output);
 				this.output.println(output);
 			} else if(parts.length == 3 && parts[0].equals("go")) {
 				//we need to do a move
@@ -126,10 +151,9 @@ public class BotParser implements Runnable {
 					for(AttackTransferMove move : attackTransferMoves)
 						output = output.concat(move.getString() + ",");
 				}
-				if(output.length() > 0)
-					this.output.println(output);
-				else
-					this.output.println("No moves");
+				if(output.length() == 0) output = "No moves";
+				log("OUT: " + output);
+				this.output.println(output);
 			} else if(parts.length == 3 && parts[0].equals("settings")) {
 				//update settings
 				currentState.updateSettings(parts[1], parts[2]);
@@ -139,10 +163,13 @@ public class BotParser implements Runnable {
 			} else if(parts[0].equals("update_map")) {
 				//all visible regions are given
 				currentState.updateMap(parts);
+			} else if(parts[0].equals("opponent_moves")) {
+				// TODO: finish implementation
 			} else {
-				System.err.printf("Unable to parse line \"%s\"\n", line);
+				log("Unable to parse line: " + line);
 			}
 		}
+		// COULD NOT REACH HERE...
 	}
 
 }

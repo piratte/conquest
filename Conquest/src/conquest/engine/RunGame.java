@@ -162,51 +162,59 @@ public class RunGame
 		this.config = config;		
 	}
 	
-	public GameResult goReplay(File replayFile) throws IOException, InterruptedException {
-		System.out.println("starting replay " + replayFile.getAbsolutePath());
-		
-		ReplayHandler replay = new ReplayHandler(replayFile);
-		
-		this.config.engine = replay.getConfig().engine;
-		
-		Player player1, player2;
-		Robot robot1, robot2;
-		
-		//setup the bots: bot1, bot2
-		robot1 = new IORobot(replay);
-		robot2 = new IORobot(replay);
-				
-		player1 = new Player(config.playerName1, robot1, config.engine.startingArmies);
-		player2 = new Player(config.playerName2, robot2, config.engine.startingArmies);
-		
-		return go(null, player1, player2, robot1, robot2);
+	public GameResult goReplay(File replayFile) {
+		try {
+			System.out.println("starting replay " + replayFile.getAbsolutePath());
+			
+			ReplayHandler replay = new ReplayHandler(replayFile);
+			
+			this.config.engine = replay.getConfig().engine;
+			
+			Player player1, player2;
+			Robot robot1, robot2;
+			
+			//setup the bots: bot1, bot2
+			robot1 = new IORobot(replay);
+			robot2 = new IORobot(replay);
+					
+			player1 = new Player(config.playerName1, robot1, config.engine.startingArmies);
+			player2 = new Player(config.playerName2, robot2, config.engine.startingArmies);
+			
+			return go(null, player1, player2, robot1, robot2);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to replay the game.", e);
+		}
 	}
 
-	public GameResult go() throws IOException, InterruptedException
-	{
-		GameLog log = null;
-		if (config.replayLog != null) {
-			log = new FileGameLog(config.replayLog);
+	public GameResult go()
+	{ 
+		try {
+			GameLog log = null;
+			if (config.replayLog != null) {
+				log = new FileGameLog(config.replayLog);
+			}
+			
+			System.out.println("starting game " + config.gameId);
+			
+			Player player1, player2;
+			Robot robot1, robot2;
+			
+			//setup the bots: bot1, bot2
+			robot1 = setupRobot(config.playerName1, config.bot1Init);
+			robot2 = setupRobot(config.playerName2, config.bot2Init);
+					
+			player1 = new Player(config.playerName1, robot1, config.engine.startingArmies);
+			player2 = new Player(config.playerName2, robot2, config.engine.startingArmies);
+			
+			if (log != null) {
+				robot1.setGameLog(log, config.playerName1);
+				robot2.setGameLog(log, config.playerName2);
+			}
+			
+			return go(log, player1, player2, robot1, robot2);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to run/finish the game.", e);
 		}
-		
-		System.out.println("starting game " + config.gameId);
-		
-		Player player1, player2;
-		Robot robot1, robot2;
-		
-		//setup the bots: bot1, bot2
-		robot1 = setupRobot(config.playerName1, config.bot1Init);
-		robot2 = setupRobot(config.playerName2, config.bot2Init);
-				
-		player1 = new Player(config.playerName1, robot1, config.engine.startingArmies);
-		player2 = new Player(config.playerName2, robot2, config.engine.startingArmies);
-		
-		if (log != null) {
-			robot1.setGameLog(log, config.playerName1);
-			robot2.setGameLog(log, config.playerName2);
-		}
-		
-		return go(log, player1, player2, robot1, robot2);
 	}
 
 	private GameResult go(GameLog log, Player player1, Player player2, Robot robot1, Robot robot2) throws InterruptedException {
@@ -244,8 +252,9 @@ public class RunGame
 		//play the game
 		while(this.engine.winningPlayer() == null && this.engine.getRoundNr() <= config.engine.maxGameRounds)
 		{
-//			robot1.addToDump("Round " + this.engine.getRoundNr() + "\n");
-//			robot2.addToDump("Round " + this.engine.getRoundNr() + "\n");
+			if (log != null) {
+				log.logComment("Engine", "Round " + this.engine.getRoundNr());
+			}
 			this.engine.playRound();
 		}
 
@@ -277,20 +286,17 @@ public class RunGame
 	//aanpassen en een QPlayer class maken? met eigen finish
 	private GameResult finish(GameMap map, Robot bot1, Robot bot2) throws InterruptedException
 	{
+		System.out.println("GAME FINISHED: stopping bots...");
 		try {
 			bot1.finish();
 		} catch (Exception e) {			
 		}
-		Thread.sleep(200);
-
+		
 		try {
 			bot2.finish();
 		} catch (Exception e) {			
 		}
-		Thread.sleep(200);
-
-		Thread.sleep(200);
-
+		
 		return this.saveGame(map, bot1, bot2);        
 	}
 
@@ -594,11 +600,6 @@ public class RunGame
 	
 	public static void main(String args[]) throws Exception
 	{	
-		// TEST ARGUMENTS
-		//args = new String[] {"0", "0", "0", "process:java bot.BotStarter", "process:java bot.BotStarter" }; // NOT WORKING
-		//args = new String[] {"0", "0", "0", "internal:bot.BotStarter", "internal:bot.BotStarter" };
-		//args = new String[] {"0", "0", "0", "process:java bot.BotStarter", "internal:bot.BotStarter" };
-		
 		Config config = new Config();
 		
 		config.bot1Init = "internal:conquest.bot.BotStarter";
@@ -606,19 +607,14 @@ public class RunGame
 		
 		config.engine.botCommandTimeoutMillis = 24*60*60*1000;
 		
+		config.engine.maxGameRounds = 100;
+		
 		config.visualize = true;
 		
 		config.replayLog = new File("./replay.log");
 		
 		RunGame run = new RunGame(config);
 		GameResult result = run.go();
-		
-//		Config config = new Config();
-//		
-//		config.visualize = true;
-//		
-//		RunGame run = new RunGame(config);
-//		run.goReplay(new File("./replay.log"));
 		
 		System.exit(0);
 	}
