@@ -15,7 +15,7 @@ FEATURES
 ![alt tag](https://github.com/kefik/conquest-engine-gui/raw/master/Conquest/screenshot.png)
 ------------------------------------------------------------
 
-Compile as follows:
+Compile and run as follows:
 
 Windows (from cmd):
 
