@@ -7,7 +7,9 @@ Heavily refactored (wrt. original Conquest codebase) ~ packages renamed, some na
 FEATURES
 
 1) possible to play with "internal" players (i.e. bots directly on java classpath), which allows you to perform better Java bot debugging 
+
 2) may output replay log into the file
+
 3) may perform replay (parses replay file and replays the match) ~ fully working
 
 ![alt tag](https://github.com/kefik/conquest-engine-gui/raw/master/Conquest/screenshot.png)
