@@ -41,6 +41,7 @@ public class ProcessRobot implements Robot
 	public ProcessRobot(String playerName, String command) throws IOException
 	{
 		child = Runtime.getRuntime().exec(command);
+		System.out.println(playerName + " -> " + command);
 		robot = new IORobot(playerName, child.getOutputStream(), false, child.getInputStream(), child.getErrorStream());
 	}
 	

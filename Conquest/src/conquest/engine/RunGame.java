@@ -17,7 +17,6 @@
 
 package conquest.engine;
 
-
 import java.awt.Point;
 import java.io.File;
 import java.io.IOException;
@@ -42,18 +41,6 @@ import conquest.game.move.MoveResult;
 import conquest.game.world.Continent;
 import conquest.game.world.Region;
 import conquest.view.GUI;
-
-
-//import org.bson.types.ObjectId;
-//import com.mongodb.MongoClient;
-//import com.mongodb.MongoException;
-//import com.mongodb.WriteConcern;
-//import com.mongodb.DB;
-//import com.mongodb.DBObject;
-//import com.mongodb.DBCollection;
-//import com.mongodb.BasicDBObject;
-//import com.mongodb.DBCursor;
-//import com.mongodb.ServerAddress;
 
 public class RunGame
 {
