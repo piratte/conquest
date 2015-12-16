@@ -10,62 +10,66 @@ import conquest.game.GameMap;
 public enum Region {
 	
 	// NORTH AMERICA
-	Alaska("Alaska", 1, Continent.North_America, 2, 4, 30), 
-	Northwest_Territory("Northwest Terr.", 2, Continent.North_America, 3, 4, 5),
-	Greenland("Greenland", 3, Continent.North_America, 5, 6, 14),
-	Alberta("Alberta", 4, Continent.North_America, 5, 7),
-	Ontario("Ontario", 5, Continent.North_America, 6, 7, 8), 
-	Quebec("Quebec", 6, Continent.North_America, 8), 
-	Western_United_States("Western US", 7, Continent.North_America, 8, 9), 
-	Eastern_United_States("Eastern US", 8, Continent.North_America, 9), 
-	Central_America("Central America", 9, Continent.North_America, 10),
+	Alaska("Alaska", 1, Continent.North_America, true, 2, 4, 30), 
+	Northwest_Territory("Northwest Terr.", 2, Continent.North_America, false, 3, 4, 5),
+	Greenland("Greenland", 3, Continent.North_America, true, 5, 6, 14),
+	Alberta("Alberta", 4, Continent.North_America, false, 5, 7),
+	Ontario("Ontario", 5, Continent.North_America, false, 6, 7, 8), 
+	Quebec("Quebec", 6, Continent.North_America, false, 8), 
+	Western_United_States("Western US", 7, Continent.North_America, false, 8, 9), 
+	Eastern_United_States("Eastern US", 8, Continent.North_America, false, 9), 
+	Central_America("Central America", 9, Continent.North_America, true, 10),
 	
 	// SOUTH AMERICA
-	Venezuela("Venezuela", 10, Continent.South_America, 11, 12), 
-	Peru("Peru", 11, Continent.South_America, 12, 13), 
-	Brazil("Brazil", 12, Continent.South_America, 13, 21), 
-	Argentina("Argentina", 13, Continent.South_America),
+	Venezuela("Venezuela", 10, Continent.South_America, true, 11, 12), 
+	Peru("Peru", 11, Continent.South_America, false, 12, 13), 
+	Brazil("Brazil", 12, Continent.South_America, true, 13, 21), 
+	Argentina("Argentina", 13, Continent.South_America, false),
 	
 	// EUROPE
-	Iceland("Iceland", 14, Continent.Europe, 15, 16), 
-	Great_Britain("Great Britain", 15, Continent.Europe, 16, 18 ,19), 
-	Scandinavia("Scandinavia", 16, Continent.Europe, 17), 
-	Ukraine("Ukraine", 17, Continent.Europe, 19, 20, 27, 32, 36), 
-	Western_Europe("West.Eur", 18, Continent.Europe, 19, 20, 21), 
-	Northern_Europe("North.Eur", 19, Continent.Europe, 20), 
-	Southern_Europe("South.Eur", 20, Continent.Europe, 21, 22, 36),
+	Iceland("Iceland", 14, Continent.Europe, true, 15, 16), 
+	Great_Britain("Great Britain", 15, Continent.Europe, false, 16, 18 ,19), 
+	Scandinavia("Scandinavia", 16, Continent.Europe, false, 17), 
+	Ukraine("Ukraine", 17, Continent.Europe, true, 19, 20, 27, 32, 36), 
+	Western_Europe("West.Eur", 18, Continent.Europe, true, 19, 20, 21), 
+	Northern_Europe("North.Eur", 19, Continent.Europe, false, 20), 
+	Southern_Europe("South.Eur", 20, Continent.Europe, true, 21, 22, 36),
 	
 	// AFRIKA
-	North_Africa("North Africa", 21, Continent.Africa, 22, 23, 24), 
-	Egypt("Egypt", 22, Continent.Africa, 23, 36), 
-	East_Africa("East Africa", 23, Continent.Africa, 24, 25, 26, 36), 
-	Congo("Congo", 24, Continent.Africa, 25), 
-	South_Africa("South Africa", 25, Continent.Africa, 26), 
-	Madagascar("Madagascar", 26, Continent.Africa),
+	North_Africa("North Africa", 21, Continent.Africa, true, 22, 23, 24), 
+	Egypt("Egypt", 22, Continent.Africa, true, 23, 36), 
+	East_Africa("East Africa", 23, Continent.Africa, true, 24, 25, 26, 36), 
+	Congo("Congo", 24, Continent.Africa, false, 25), 
+	South_Africa("South Africa", 25, Continent.Africa, false, 26), 
+	Madagascar("Madagascar", 26, Continent.Africa, false),
 	
 	// ASIA
-	Ural("Ural", 27, Continent.Asia, 28, 32, 33), 
-	Siberia("Siberia", 28, Continent.Asia, 29, 31, 33, 34), 
-	Yakutsk("Yakutsk", 29, Continent.Asia, 30, 31), 
-	Kamchatka("Kamchatka", 30, Continent.Asia, 31, 34, 35), 
-	Irkutsk("Irkutsk", 31, Continent.Asia, 34), 
-	Kazakhstan("Kazakhstan", 32, Continent.Asia, 33, 36, 37), 
-	China("China", 33, Continent.Asia, 34, 37, 38), 
-	Mongolia("Mongolia", 34, Continent.Asia, 35), 
-	Japan("Japan", 35, Continent.Asia), 
-	Middle_East("Middle East", 36, Continent.Asia, 37), 
-	India("India", 37, Continent.Asia, 38), 
-	Siam("Siam", 38, Continent.Asia, 39), 
+	Ural("Ural", 27, Continent.Asia, true, 28, 32, 33), 
+	Siberia("Siberia", 28, Continent.Asia, false, 29, 31, 33, 34), 
+	Yakutsk("Yakutsk", 29, Continent.Asia, false, 30, 31), 
+	Kamchatka("Kamchatka", 30, Continent.Asia, true, 31, 34, 35), 
+	Irkutsk("Irkutsk", 31, Continent.Asia, false, 34), 
+	Kazakhstan("Kazakhstan", 32, Continent.Asia, true, 33, 36, 37), 
+	China("China", 33, Continent.Asia, false, 34, 37, 38), 
+	Mongolia("Mongolia", 34, Continent.Asia, false, 35), 
+	Japan("Japan", 35, Continent.Asia, false), 
+	Middle_East("Middle East", 36, Continent.Asia, true, 37), 
+	India("India", 37, Continent.Asia, false, 38), 
+	Siam("Siam", 38, Continent.Asia, true, 39), 
 	
 	// AUSTRALIA
-	Indonesia("Indonesia", 39, Continent.Australia, 40, 41), 
-	New_Guinea("New Guinea", 40, Continent.Australia, 41, 42), 
-	Western_Australia("West. Australia", 41, Continent.Australia, 42), 
-	Eastern_Australia("East. Australia", 42, Continent.Australia);
+	Indonesia("Indonesia", 39, Continent.Australia, true, 40, 41), 
+	New_Guinea("New Guinea", 40, Continent.Australia, false, 41, 42), 
+	Western_Australia("West. Australia", 41, Continent.Australia, false, 42), 
+	Eastern_Australia("East. Australia", 42, Continent.Australia, false);
 			
 	public final int id;
 	public final Continent continent;
 	public final String mapName;
+	/**
+	 * Whether this region makes the border for the continent.
+	 */
+	public final boolean continentBorder;
 	
 	/**
 	 * DO NOT USE, contains only "forward" neighbours. Use {@link #getNeighbours()} to obtain ALL neighbours.
@@ -83,10 +87,11 @@ public enum Region {
 	 */
 	private List<Region> allNeighbours = null;
 	
-	private Region(String mapName, int id, Continent superRegion, int... forwardNeighbourIds) {
+	private Region(String mapName, int id, Continent superRegion, boolean continentBorder, int... forwardNeighbourIds) {
 		this.mapName = mapName;
 		this.id = id;
 		this.continent = superRegion;
+		this.continentBorder = continentBorder;
 		this.forwardNeighbourIds = forwardNeighbourIds;
 	}
 	
