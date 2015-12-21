@@ -15,7 +15,7 @@ FEATURES
 ![alt tag](https://github.com/kefik/conquest-engine-gui/raw/master/Conquest/screenshot.png)
 ------------------------------------------------------------
 
-Compile and run as follows:
+Compile Conquest project and run as follows (from within Conquest directory):
 
 Windows (from cmd):
 
