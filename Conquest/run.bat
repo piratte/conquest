@@ -1,1 +1,1 @@
-java -cp bin conquest.engine.RunGame 0 0 0 "internal:conquest.bot.BotStarter" "internal:conquest.bot.BotStarter"
+java -cp bin conquest.Conquest 100 5000 "internal:conquest.bot.BotStarter" "process:java -cp bin conquest.bot.BotStarter" true replay.log
