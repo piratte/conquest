@@ -29,6 +29,8 @@ import conquest.bot.Bot;
 import conquest.bot.BotParser;
 import conquest.bot.BotStarter;
 import conquest.bot.BotState;
+import conquest.bot.fight.FightSimulation.FightAttackersResults;
+import conquest.bot.fight.FightSimulation.FightDefendersResults;
 import conquest.engine.RunGame;
 import conquest.engine.RunGame.Config;
 import conquest.engine.RunGame.GameResult;
@@ -41,8 +43,8 @@ import conquest.game.world.Continent;
 
 public class AggressiveBot implements Bot 
 {
-	public static final String PLR1 = "PLR1";
-	public static final String PLR2 = "PLR2";
+	FightAttackersResults aRes;
+	FightDefendersResults dRes;
 	
 	/**
 	 * A method used at the start of the game to decide which player start with what Regions. 6 Regions are required to be returned.
@@ -52,6 +54,9 @@ public class AggressiveBot implements Bot
 	@Override
 	public ArrayList<RegionData> getPreferredStartingRegions(BotState state, Long timeOut)
 	{
+		aRes = FightAttackersResults.loadFromFile(new File("FightSimulation-Attackers-A200-D200.obj"));
+		dRes = FightDefendersResults.loadFromFile(new File("FightSimulation-Defenders-A200-D200.obj"));
+		
 		int m = 6;
 		
 		// GET ALL PICKABLE STARTING REGIONS
@@ -68,6 +73,7 @@ public class AggressiveBot implements Bot
 				return priority1 - priority2;
 			}
 		});
+		
 		
 		// REMOVE CONTINENT WE DO NOT WANT
 		while (preferredStartingRegions.size() > m) preferredStartingRegions.remove(preferredStartingRegions.size()-1);
@@ -138,6 +144,12 @@ public class AggressiveBot implements Bot
 
 		});
 		
+		
+		// DO NOT ADD SOLDIER TO REGIONS THAT HAS SCORE 0 (not perspective)
+		int i = 0;
+		while (i < myReg.size() && getRegionScore(myReg.get(i)) > 0) ++i;
+		while (i < myReg.size()) myReg.remove(i);
+		
 		int armiesLeft = state.getStartingArmies();
 		
 		int index = 0;
@@ -146,8 +158,8 @@ public class AggressiveBot implements Bot
 			result.add(new PlaceArmiesMove(myName, myReg.get(index), 3));
 			armiesLeft -= 3;
 			++index;
+			if (index >= myReg.size()) index = 0;
 		}
-		
 		
 		return result;
 	}
@@ -189,15 +201,20 @@ public class AggressiveBot implements Bot
 	}	
 	
 	private int getRequiredSoldiersToConquerRegion(RegionData from, RegionData to) {
-		double expectedRounds = to.getArmies() / 0.6;			
-		double expectedCasualties = expectedRounds * 0.7;
-
-		int requiredSoldiers = (int)Math.ceil(expectedCasualties);
-
-		return requiredSoldiers;
+		int attackers = from.getArmies() - 1;
+		int defenders = to.getArmies();
+		
+		for (int a = 1; a <= attackers; ++a) {
+			double chance = aRes.getAttackersWinChance(a, defenders);
+			if (chance > 0.7) {
+				return a;
+			}
+		}
+		
+		return Integer.MAX_VALUE;
 	}
 		
-	private boolean shouldAttack(RegionData from, RegionData to) {		
+	private boolean shouldAttack(RegionData from, RegionData to) {	
 		return from.getArmies() > getRequiredSoldiersToConquerRegion(from, to);
 	}
 	

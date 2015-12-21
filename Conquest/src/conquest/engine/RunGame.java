@@ -591,6 +591,7 @@ public class RunGame
 		
 		config.bot1Init = "internal:conquest.bot.BotStarter";
 		config.bot2Init = "internal:conquest.bot.BotStarter";
+		//config.bot2Init = "process:java -cp bin conquest.bot.BotStarter";
 		
 		config.engine.botCommandTimeoutMillis = 24*60*60*1000;
 		
