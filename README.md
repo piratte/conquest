@@ -14,7 +14,13 @@ FEATURES
 
 4) human player (you can play against your AI!), use "human" as bot init command
 
+AI vs AI
+
 ![alt tag](https://github.com/kefik/conquest-engine-gui/raw/master/Conquest/screenshot.png)
+
+HUMAN vs AI
+
+![alt tag](https://github.com/kefik/conquest-engine-gui/raw/master/Conquest/screenshot-human.png)
 ------------------------------------------------------------
 
 Compile Conquest project and run as follows (from within Conquest directory):
