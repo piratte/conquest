@@ -274,6 +274,7 @@ public class RunGame
 		}
 		if (botInit.startsWith("human")) {
 			config.visualize = true;
+			GUI.positions = GUI.positionsHuman;
 			return new HumanRobot(playerName);
 		}
 		throw new RuntimeException("Invalid init string for player '" + playerName + "', must start either with 'process:' or 'internal:' passed value was: " + botInit);
@@ -598,8 +599,8 @@ public class RunGame
 	{	
 		Config config = new Config();
 		
-		//config.bot1Init = "internal:conquest.bot.BotStarter";
-		config.bot1Init = "human";
+		config.bot1Init = "internal:conquest.bot.BotStarter";
+		//config.bot1Init = "human";
 		config.bot2Init = "internal:conquest.bot.BotStarter";
 		//config.bot2Init = "process:java -cp bin conquest.bot.BotStarter";
 		

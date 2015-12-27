@@ -38,8 +38,53 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 	private static final int WIDTH = 1239;
 	private static final int HEIGHT = 664;
 	
+	public static int[][] positionsAIvsAI = new int[][]{
+		{95, 150},  //1.  Alaska
+		{209, 160}, //2.  Northwest Territory
+		{441, 96},  //3.  Greenland
+		{190, 205}, //4.  Alberta
+		{257, 209}, //5.  Ontario
+		{355, 203}, //6.  Quebec
+		{224, 263}, //7.  Western United States
+		{295,277},  //8.  Eastern United States
+		{255,333},  //9.  Central America
+		{350,373},  //10. Venezuela
+		{344,445},  //11. Peru
+		{415,434},  //12. Brazil
+		{374,511},  //13. Argentina
+		{514,158},  //14. Iceland
+		{545,200},  //15. Great Britain
+		{627,160},  //16. Scandinavia
+		{699,205},  //17. Ukraine
+		{556,266},  //18. Western Europe
+		{618, 218}, //19. Northern Europe
+		{650, 255}, //20. Southern Europe
+		{576,339},  //21. North Africa
+		{647,316},  //22. Egypt
+		{698,379},  //23. East Africa
+		{654,408},  //24. Congo
+		{657,478},  //25. South Africa
+		{726,465},  //26. Madagascar
+		{800,178},  //27. Ural
+		{890,146},  //28. Siberia
+		{972,150},  //29. Yakutsk
+		{1080,150}, //30. Kamchatka
+		{942,205},  //31. Irkutsk
+		{798,242},  //32. Kazakhstan
+		{895,279},  //33. China
+		{965,242},  //34. Mongolia
+		{1030,279}, //35. Japan
+		{716,295},  //36. Middle East
+		{835,316},  //37. India
+		{908,348},  //38. Siam
+		{930,412},  //39. Indonesia
+		{1035,422}, //40. New Guinea
+		{983,484},  //41. Western Australia
+		{1055,500}, //42. Eastern Australia
+	};
+	
 	//Position of each region's info (team color & number of armies)
-	public static final int[][] positions = new int[][]{
+	public static final int[][] positionsHuman = new int[][]{
 				{95, 150},  //1.  Alaska
 				{209, 143}, //2.  Northwest Territory
 				{441, 96},  //3.  Greenland
@@ -83,6 +128,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 				{971,484},  //41. Western Australia
 				{1055,500}, //42. Eastern Australia
 			};
+	
+	public static int[][] positions = positionsAIvsAI;
 	
 	private JLabel roundNumTxt;
 	private JLabel actionTxt;
