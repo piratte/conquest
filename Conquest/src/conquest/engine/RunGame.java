@@ -277,7 +277,7 @@ public class RunGame
 			GUI.positions = GUI.positionsHuman;
 			return new HumanRobot(playerName);
 		}
-		throw new RuntimeException("Invalid init string for player '" + playerName + "', must start either with 'process:' or 'internal:' passed value was: " + botInit);
+		throw new RuntimeException("Invalid init string for player '" + playerName + "', must start either with 'process:' or 'internal:' or 'human', passed value was: " + botInit);
 	}
 
 	//aanpassen en een QPlayer class maken? met eigen finish

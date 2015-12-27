@@ -13,6 +13,7 @@ FEATURES
 3) may perform replay (parses replay file and replays the match) ~ fully working
 
 4) human player (you can play against your AI!), use "human" as bot init command
+-- beware, some buttons can be "right clicked" to "reverse the effect" (e.g. when placing armies left click -> plus, right click -> minus or when moving armies left click -> OK, right click -> cancel)
 
 AI vs AI
 
