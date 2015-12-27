@@ -1,4 +1,4 @@
-Warlight AI Challenge engine (http://theaigames.com/competitions/warlight-ai-challenge) + interactive visual map + replays.
+Warlight AI Challenge engine (http://theaigames.com/competitions/warlight-ai-challenge) + interactive visual map + replays + internal bots + human players.
 
 Forked from: https://github.com/skylogic004/conquest-engine-gui
 
