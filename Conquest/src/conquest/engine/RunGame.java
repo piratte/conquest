@@ -27,9 +27,11 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import conquest.engine.Engine.EngineConfig;
+import conquest.engine.Robot.RobotConfig;
 import conquest.engine.replay.FileGameLog;
 import conquest.engine.replay.GameLog;
 import conquest.engine.replay.ReplayHandler;
+import conquest.engine.robot.HumanRobot;
 import conquest.engine.robot.IORobot;
 import conquest.engine.robot.InternalRobot;
 import conquest.engine.robot.ProcessRobot;
@@ -41,6 +43,7 @@ import conquest.game.move.MoveResult;
 import conquest.game.world.Continent;
 import conquest.game.world.Region;
 import conquest.view.GUI;
+import conquest.view.RegionInfo.Team;
 
 public class RunGame
 {
@@ -192,12 +195,7 @@ public class RunGame
 					
 			player1 = new Player(config.playerName1, robot1, config.engine.startingArmies);
 			player2 = new Player(config.playerName2, robot2, config.engine.startingArmies);
-			
-			if (log != null) {
-				robot1.setGameLog(log, config.playerName1);
-				robot2.setGameLog(log, config.playerName2);
-			}
-			
+						
 			return go(log, player1, player2, robot1, robot2);
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to run/finish the game.", e);
@@ -225,6 +223,13 @@ public class RunGame
 			log.start(config);
 		}
 		
+		// setup robots
+		RobotConfig robot1Cfg = new RobotConfig(player1.getName(), Team.PLAYER_1, config.engine.botCommandTimeoutMillis, log, gui);
+		RobotConfig robot2Cfg = new RobotConfig(player2.getName(), Team.PLAYER_2, config.engine.botCommandTimeoutMillis, log, gui);
+		
+		robot1.setup(robot1Cfg);
+		robot2.setup(robot2Cfg);
+				
 		//send the bots the info they need to start
 		robot1.writeInfo("settings your_bot " + player1.getName());
 		robot1.writeInfo("settings opponent_bot " + player2.getName());
@@ -266,6 +271,10 @@ public class RunGame
 		if (botInit.startsWith("internal:")) {
 			String botFQCN = botInit.substring(9);
 			return new InternalRobot(playerName, botFQCN);
+		}
+		if (botInit.startsWith("human")) {
+			config.visualize = true;
+			return new HumanRobot(playerName);
 		}
 		throw new RuntimeException("Invalid init string for player '" + playerName + "', must start either with 'process:' or 'internal:' passed value was: " + botInit);
 	}
@@ -589,7 +598,8 @@ public class RunGame
 	{	
 		Config config = new Config();
 		
-		config.bot1Init = "internal:conquest.bot.BotStarter";
+		//config.bot1Init = "internal:conquest.bot.BotStarter";
+		config.bot1Init = "human";
 		config.bot2Init = "internal:conquest.bot.BotStarter";
 		//config.bot2Init = "process:java -cp bin conquest.bot.BotStarter";
 		

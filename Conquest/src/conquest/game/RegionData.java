@@ -39,8 +39,9 @@ public class RegionData {
 		this.neighbors = new LinkedList<RegionData>();
 		this.playerName = "unknown";
 		this.armies = 0;
-		
-		superRegion.addSubRegion(this);
+		if (superRegion != null) {
+			superRegion.addSubRegion(this);
+		}
 	}
 	
 	public RegionData(Region region, int id, ContinentData superRegion, String playerName, int armies)
@@ -143,5 +144,8 @@ public class RegionData {
 		return region.continent;
 	}
 	
-	
+	@Override
+	public String toString() {
+		return region.name() + "[" + playerName + "|" + armies + "]";
+	}
 }

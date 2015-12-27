@@ -24,11 +24,13 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 
 import conquest.engine.Robot;
+import conquest.engine.Robot.RobotConfig;
 import conquest.engine.io.handler.Handler;
 import conquest.engine.io.handler.IHandler;
 import conquest.engine.replay.GameLog;
 import conquest.game.RegionData;
 import conquest.game.move.Move;
+import conquest.view.GUI;
 
 
 public class IORobot implements Robot
@@ -42,6 +44,8 @@ public class IORobot implements Robot
 	private GameLog log;
 
 	private String logPlayerName;
+
+	private RobotConfig config;
 	
 	public IORobot(IHandler handler) throws IOException
 	{
@@ -56,20 +60,14 @@ public class IORobot implements Robot
 	}
 	
 	@Override
-	public void setGameLog(GameLog gameLog, String playerName) {
-		this.log = gameLog;
-		this.logPlayerName = playerName;
-		handler.setGameLog(gameLog, playerName);
+	public void setup(RobotConfig config) {
+		this.config = config;
+		handler.setGameLog(config.gameLog, config.playerName);
 	}
-	
-	@Override
-	public void setup(long timeOut)
-	{
-	}
-	
-	@Override
-	public void writeMove(Move move) {
-	}
+		
+//	@Override
+//	public void writeMove(Move move) {
+//	}
 	
 	@Override
 	public String getPreferredStartingArmies(long timeOut, ArrayList<RegionData> pickableRegions)

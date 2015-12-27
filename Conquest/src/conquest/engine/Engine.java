@@ -121,6 +121,10 @@ public class Engine {
 	
 	public void playRound()
 	{
+		if (gui != null) {
+			gui.updateRegions(map.regions);
+		}
+		
 		getMoves(player1.getBot().getPlaceArmiesMoves(timeoutMillis), player1);
 		getMoves(player2.getBot().getPlaceArmiesMoves(timeoutMillis), player2);
 		
@@ -128,6 +132,10 @@ public class Engine {
 		
 		getMoves(player1.getBot().getAttackTransferMoves(timeoutMillis), player1);
 		getMoves(player2.getBot().getAttackTransferMoves(timeoutMillis), player2);
+		
+		if (gui != null) {
+			gui.placeArmies(map.regions, lastPlaceArmies);
+		}
 		
 		executeAttackTransfer();
 		
@@ -144,7 +152,8 @@ public class Engine {
 		roundNr++;	
 	}
 	
-	public void distributeStartingRegions()
+	@SuppressWarnings("unchecked")
+	public List<RegionData>[] distributeStartingRegions()
 	{
 		ArrayList<RegionData> pickableRegions = new ArrayList<RegionData>();
 		int nrOfStartingRegions = 3;
@@ -221,6 +230,12 @@ public class Engine {
 		fullPlayedGame.add(new MoveResult(null, map.getMapCopy()));
 		player1PlayedGame.add(new MoveResult(null, map.getVisibleMapCopyForPlayer(player1)));
 		player2PlayedGame.add(new MoveResult(null, map.getVisibleMapCopyForPlayer(player2)));
+		
+		if (gui != null) {
+			gui.regionsChosen(map.regions);
+		}
+		
+		return new List[]{ givenP1Regions, givenP2Regions };
 	}
 	
 	private List<RegionData> getRandomStartingRegions(ArrayList<RegionData> pickableRegions)
@@ -313,6 +328,9 @@ public class Engine {
 	private boolean firstPlaceArmies = true;
 	
 	//Moves have already been checked if they are legal
+	
+	List<PlaceArmiesMove> lastPlaceArmies;
+	
 	private void executePlaceArmies()
 	{		
 		List<PlaceArmiesMove> legalMoves = new ArrayList<PlaceArmiesMove>();
@@ -342,14 +360,8 @@ public class Engine {
 		}
 		
 		if (gui != null) {
-			if (firstPlaceArmies) {
-				gui.firstPlaceArmies(legalMoves);
-				firstPlaceArmies = false;
-			} else {
-				gui.placeArmies(legalMoves);
-			}
+			lastPlaceArmies = legalMoves;
 		}
-		
 		
 	}
 

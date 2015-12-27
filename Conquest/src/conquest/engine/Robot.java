@@ -21,16 +21,38 @@ import java.util.ArrayList;
 
 import conquest.engine.replay.GameLog;
 import conquest.game.RegionData;
-import conquest.game.move.Move;
+import conquest.view.GUI;
+import conquest.view.RegionInfo.Team;
 
 
 public interface Robot {
 	
-	public void setGameLog(GameLog gameLog, String playerName);
+	public static class RobotConfig {
+		
+		public final String playerName;
+		
+		public final Team team;
+		
+		public final long timeoutMillis;
+		
+		public final GameLog gameLog;
+		
+		public final GUI gui;
+
+		public RobotConfig(String playerName, Team team, long timeoutMillis, GameLog gameLog, GUI gui) {
+			super();
+			this.playerName = playerName;
+			this.team = team;
+			this.timeoutMillis = timeoutMillis;
+			this.gameLog = gameLog;
+			this.gui = gui;
+		}
+		
+	}
+
+	public void setup(RobotConfig config);
 	
-	public void setup(long timeOut);
-	
-	public void writeMove(Move move);
+	//public void writeMove(Move move);
 	
 	public String getPreferredStartingArmies(long timeOut, ArrayList<RegionData> pickableRegions);
 	

@@ -12,6 +12,8 @@ FEATURES
 
 3) may perform replay (parses replay file and replays the match) ~ fully working
 
+4) human player (you can play against your AI!), use "human" as bot init command
+
 ![alt tag](https://github.com/kefik/conquest-engine-gui/raw/master/Conquest/screenshot.png)
 ------------------------------------------------------------
 

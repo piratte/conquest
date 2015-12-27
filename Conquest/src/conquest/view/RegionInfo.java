@@ -49,13 +49,14 @@ public class RegionInfo extends JPanel {
 	}
 		
 	private int diam;
-	private Color circleColor;
+	//private Color circleColor;
 	private JLabel txt;
 	private JLabel name;
 	private Region region;
 	private int armies = 0;
 	private Team team;
 	private boolean highlight = false;
+	private boolean selected = false;
 
 	public int armiesPlus = 0;
 	
@@ -111,27 +112,15 @@ public class RegionInfo extends JPanel {
 		this.revalidate();
 		this.repaint();
 	}
-	
-	public void setTeamColor() {
-		this.circleColor = team.color;
-		this.highlight = false;
-		this.revalidate();
-		this.repaint();
-	}
-	
-	public void setHighlight() {		
-		this.highlight = true;
-		this.circleColor = team.highlight;
 		
-		//this.txt.setForeground(Color.LIGHT_GRAY);
-		//this.name.setForeground(Color.LIGHT_GRAY);
-		//this.revalidate();
+	public void setHighlight(boolean state) {		
+		this.highlight = state;
+		this.revalidate();
 		this.repaint();
 	}
 	
 	public void setTeam(Team team) {
 		this.team = team;
-		this.circleColor = team.color;
 		if (this.txt != null) {
 			this.txt.setForeground(Color.BLACK);
 		}
@@ -172,7 +161,11 @@ public class RegionInfo extends JPanel {
         	g.fillOval(width/2 - diam/2 - 4, 0, this.diam + 8, this.diam + 8);
         }
         
-        g.setColor(this.circleColor);              
+        if (highlight) {
+        	g.setColor(team.highlight);        	
+        } else {
+        	g.setColor(team.color);
+        }
         g.fillOval(width/2 - diam/2, 4, this.diam, this.diam);
         
     }

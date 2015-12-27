@@ -11,6 +11,7 @@ import conquest.engine.io.InputOutputStream;
 import conquest.engine.replay.GameLog;
 import conquest.game.RegionData;
 import conquest.game.move.Move;
+import conquest.view.GUI;
 
 
 public class InternalRobot implements Robot {
@@ -35,20 +36,14 @@ public class InternalRobot implements Robot {
 	}
 	
 	@Override
-	public void setGameLog(GameLog gameLog, String playerName) {
-		robot.setGameLog(gameLog, playerName);
+	public void setup(RobotConfig config) {
+		robot.setup(config);
 	}
-
-	@Override
-	public void setup(long timeOut)
-	{
-		robot.setup(timeOut);
-	}
-	
-	@Override
-	public void writeMove(Move move) {
-		robot.writeMove(move);
-	}
+		
+//	@Override
+//	public void writeMove(Move move) {
+//		robot.writeMove(move);
+//	}
 	
 	@Override
 	public String getPreferredStartingArmies(long timeOut, ArrayList<RegionData> pickableRegions)

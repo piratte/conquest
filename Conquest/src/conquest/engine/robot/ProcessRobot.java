@@ -21,22 +21,22 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import conquest.engine.Robot;
+import conquest.engine.Robot.RobotConfig;
 import conquest.engine.replay.GameLog;
 import conquest.game.RegionData;
 import conquest.game.move.Move;
+import conquest.view.GUI;
 
 
 public class ProcessRobot implements Robot
 {
-	Object mutex = new Object();
+	private Object mutex = new Object();
 	
-	Process child;
+	private Process child;
 	
-	IORobot robot;
+	private IORobot robot;
 
-	private GameLog log;
-
-	private String logPlayerName;
+	private RobotConfig config;
 	
 	public ProcessRobot(String playerName, String command) throws IOException
 	{
@@ -46,22 +46,15 @@ public class ProcessRobot implements Robot
 	}
 	
 	@Override
-	public void setGameLog(GameLog gameLog, String playerName) {
-		this.log = gameLog;
-		this.logPlayerName = playerName;
-		robot.setGameLog(gameLog, playerName);
+	public void setup(RobotConfig config) {
+		this.config = config;
+		robot.setup(config);
 	}
-	
-	@Override
-	public void setup(long timeOut)
-	{
-		robot.setup(timeOut);
-	}
-	
-	@Override
-	public void writeMove(Move move) {
-		robot.writeMove(move);
-	}
+		
+//	@Override
+//	public void writeMove(Move move) {
+//		robot.writeMove(move);
+//	}
 	
 	@Override
 	public String getPreferredStartingArmies(long timeOut, ArrayList<RegionData> pickableRegions)
