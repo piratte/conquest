@@ -1134,6 +1134,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 	
 	private void moveArmyRegionClicked(Button targetButton, Region region, int change) {
 		if (targetButton.getLabel().equals("X")) {
+			regions[moveFrom.id-1].setHighlight(false);
+			
 			moveFrom = null;
 			showPlayerRegionButtons();
 			hideAllOtherButtons(null);
@@ -1146,6 +1148,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 		if (targetButton.getLabel().equals(">>")) {
 			moveFrom = region;
 			
+			regions[moveFrom.id-1].setHighlight(true);
+			
 			hidePlayerRegionButtonsExcept(region);
 			hideAllOtherButtons(null);
 			showNeighbors(region);
@@ -1157,6 +1161,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 		
 		if (targetButton.getLabel().equals("<<")) {
 			moveTo = region;
+			
+			regions[moveTo.id-1].setHighlight(true);
 			
 			movePlayerArmies = 0;
 			AttackTransferMove command = null;
@@ -1193,6 +1199,9 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 		}
 		
 		if (targetButton.getLabel().equals("OK")) {
+			
+			regions[moveFrom.id-1].setHighlight(false);
+			regions[moveTo.id-1].setHighlight(false);
 			
 			Button fromButton = getMoveArmyButton(moveFrom);
 			Button toButton = getMoveArmyButton(moveTo);
