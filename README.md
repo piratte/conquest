@@ -2,7 +2,7 @@ Warlight AI Challenge engine (http://theaigames.com/competitions/warlight-ai-cha
 
 Forked from: https://github.com/skylogic004/conquest-engine-gui
 
-Heavily refactored (wrt. original Conquest codebase) ~ packages renamed, some class renamed, etc., but protocol is still the same so it should work with original bots.
+Heavily refactored (wrt. original Conquest codebase) ~ packages renamed, some classes renamed, etc., but communication protocol is still the same so it should work with original bots.
 
 FEATURES
 
