@@ -63,6 +63,11 @@ public class RunGame
 		
 		public boolean visualize = true;
 		
+		/**
+		 * Optimize region circle positions for human controls.
+		 */
+		public boolean forceHumanVisualization = false;
+		
 		public File replayLog = null;
 		
 		public EngineConfig engine = new EngineConfig();
@@ -213,6 +218,9 @@ public class RunGame
 		// setup GUI
 		GUI gui = null;
 		if (config.visualize) {
+			if (config.forceHumanVisualization) {
+				gui.positions = gui.positionsHuman;
+			}
 			gui = new GUI(config.playerName1, config.playerName2);
 		}
 		
@@ -274,7 +282,7 @@ public class RunGame
 		}
 		if (botInit.startsWith("human")) {
 			config.visualize = true;
-			GUI.positions = GUI.positionsHuman;
+			config.forceHumanVisualization = true;
 			return new HumanRobot(playerName);
 		}
 		throw new RuntimeException("Invalid init string for player '" + playerName + "', must start either with 'process:' or 'internal:' or 'human', passed value was: " + botInit);

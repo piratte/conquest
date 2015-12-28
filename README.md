@@ -1,4 +1,4 @@
-Warlight AI Challenge engine (http://theaigames.com/competitions/warlight-ai-challenge) + interactive visual map + replays + internal bots + human players.
+Warlight AI Challenge engine (http://theaigames.com/competitions/warlight-ai-challenge) + interactive visual map + replays + internal bots (can be hijacked) + human players.
 
 Forked from: https://github.com/skylogic004/conquest-engine-gui
 
@@ -7,6 +7,8 @@ Heavily refactored (wrt. original Conquest codebase) ~ packages renamed, some cl
 FEATURES
 
 1) possible to play with "internal" players (i.e. bots directly on java classpath), which allows you to perform better Java bot debugging 
+
+-- you can hijack controls of internal players when the game is visualized (press 'H' to toggle PLR1 hijack, press 'J' to toggle PLR2 hijack)
 
 2) may output replay log into the file
 

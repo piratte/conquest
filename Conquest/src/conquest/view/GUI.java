@@ -131,6 +131,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 	
 	public static int[][] positions = positionsAIvsAI;
 	
+	private GUINotif notification;
+	
 	private JLabel roundNumTxt;
 	private JLabel actionTxt;
 	
@@ -221,11 +223,14 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 		p2.setText("P2");
 		mainLayer.add(p2, JLayeredPane.PALETTE_LAYER);
 		
+		notification = new GUINotif(mainLayer, 1015, 45, 200, 50);		
+		
 		//Finish
         this.pack();
         this.setSize(WIDTH, HEIGHT);
         this.setLocationRelativeTo(null);
         this.setVisible(true);
+                
 	}
 	
 	public RegionInfo.Team getTeam(String player) {
@@ -292,17 +297,21 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 		switch(c) {
 		case 'n':
 			nextRound = true;
+			showNotification("SKIP TO NEXT ROUND");
 			break;
 		case 'c':
 			continual = !continual;
-			break;
-		case '-':
-			continualTime += 50;
-			continualTime = Math.min(continualTime, 3000);
+			showNotification( continual ? "Continual run enabled" : "Continual run disabled");
 			break;
 		case '+':
+			continualTime += 50;
+			continualTime = Math.min(continualTime, 3000);
+			showNotification("Action visualized for: " + continualTime + " ms");
+			break;
+		case '-':
 			continualTime -= 50;
 			continualTime = Math.max(continualTime, 200);
+			showNotification("Action visualized for: " + continualTime + " ms");
 			break;
 		}
 	}
@@ -313,6 +322,14 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 
 	@Override
 	public void keyReleased(KeyEvent e) {
+	}
+	
+	// =====
+	// NOTIF
+	// =====
+	
+	public void showNotification(String txt) {
+		notification.show(txt, 1500);
 	}
 	
 	// =============
@@ -365,6 +382,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 	}
 	
 	public void updateAfterRound(int roundNum, GameMap map) { //called by Engine.playRound()
+		this.requestFocusInWindow();
+		
 		//Update round number
 		roundNumTxt.setText("Round #: " + Integer.toString(roundNum));
 		
@@ -389,6 +408,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 	List<RegionData> pickableRegions = null;
 	
 	public void pickableRegions(List<RegionData> pickableRegions) {
+		this.requestFocusInWindow();
+		
 		actionTxt.setText("PICKABLE REGIONS");
 		
 		for (RegionData regionData : pickableRegions) {
@@ -403,6 +424,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 	}
 	
 	public void updateRegions(List<RegionData> regions) {
+		this.requestFocusInWindow();
+		
 		for (RegionData data : regions) {
 			int id = data.getId();
 			RegionInfo region = this.regions[id-1];
@@ -413,6 +436,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 	}
 	
 	public void regionsChosen(List<RegionData> regions) {
+		this.requestFocusInWindow();
+		
 		actionTxt.setText("CHOSEN REGIONS");
 		
 		updateRegions(regions);
@@ -435,6 +460,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 	}
 	
 	public void placeArmies(LinkedList<RegionData> regions, List<PlaceArmiesMove> placeArmiesMoves) {
+		this.requestFocusInWindow();
+		
 		actionTxt.setText("PLACE ARMIES");
 		
 		updateRegions(regions);
@@ -465,6 +492,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 	}	
 
 	public void transfer(AttackTransferMove move) {
+		this.requestFocusInWindow();
+		
 		actionTxt.setText("TRANSFER BY " + move.getPlayerName());
 		
 		RegionInfo fromRegion = this.regions[move.getFromRegion().getId() - 1];
@@ -495,6 +524,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 	}
 
 	public void attack(AttackTransferMove move) {
+		this.requestFocusInWindow();
+		
 		actionTxt.setText("ATTACK BY " + move.getPlayerName());
 		
 		RegionInfo fromRegion = this.regions[move.getFromRegion().getId() - 1];
@@ -513,6 +544,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 	}
 
 	public void attackResult(RegionData fromRegionData, RegionData toRegionData, int attackersDestroyed, int defendersDestroyed) {
+		this.requestFocusInWindow();
+		
 		RegionInfo fromRegion = this.regions[fromRegionData.getId() - 1];
 		RegionInfo toRegion = this.regions[toRegionData.getId() - 1];
 		
@@ -570,6 +603,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 	private String chooseRegionsPlayerName;
 	
 	public List<Region> chooseRegionsHuman(String playerName, List<Region> availableRegions) {
+		this.requestFocusInWindow();
+		
 		continual = true;
 		
 		this.chooseRegionsPlayerName = playerName;
@@ -598,6 +633,7 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					regionClicked(targetRegion);
+					GUI.this.requestFocusInWindow();
 				}
 			});
 		}
@@ -611,6 +647,7 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				chooseRegionsAction.countDown();
+				GUI.this.requestFocusInWindow();
 			}
 		});
 		finishedButton.setVisible(false);
@@ -686,6 +723,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 	private Button placeArmiesFinishedButton;
 		
 	public List<PlaceArmiesMove> placeArmiesHuman(String playerName, Team team, int startingArmies) {
+		this.requestFocusInWindow();
+		
 		List<Region> availableRegions = new ArrayList<Region>();
 		for (int i = 0; i < regions.length; ++i) {
 			RegionInfo info = regions[i];
@@ -728,6 +767,7 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 				@Override
 				public void clicked(int change) {
 					placeArmyRegionClicked(targetRegion, change);
+					GUI.this.requestFocusInWindow();
 				}
 			};
 		}
@@ -744,6 +784,7 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 					if (armiesLeft == 0) {
 						placeArmiesAction.countDown();
 					}
+					GUI.this.requestFocusInWindow();
 				}
 			});
 		}
@@ -829,6 +870,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 	private Button moveArmiesFinishedButton;
 		
 	public List<AttackTransferMove> moveArmiesHuman(String playerName, Team team) {
+		this.requestFocusInWindow();
+		
 		List<Region> playerRegions = new ArrayList<Region>();
 		List<Region> otherRegions = new ArrayList<Region>();
 		for (int i = 0; i < regions.length; ++i) {
@@ -899,6 +942,7 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 					} else {
 						moveArmyRegionClicked(targetButton, targetRegion, -1);
 					}
+					GUI.this.requestFocusInWindow();
 				}
 			});
 		}
@@ -952,6 +996,7 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 					} else {
 						moveArmyRegionClicked(targetButton, targetRegion, -1);
 					}
+					GUI.this.requestFocusInWindow();
 				}
 			});
 		}
@@ -975,6 +1020,7 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 				@Override
 				public void clicked(int change) {
 					updateMoveArmies(change);
+					GUI.this.requestFocusInWindow();
 				}
 			};
 		}
@@ -992,6 +1038,7 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 				@Override
 				public void clicked(int change) {
 					updateMoveArmies(change);
+					GUI.this.requestFocusInWindow();
 				}
 			};
 		}
@@ -1008,6 +1055,7 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 					if (armiesLeft == 0) {
 						moveArmiesAction.countDown();
 					}
+					GUI.this.requestFocusInWindow();
 				}
 			});
 		}

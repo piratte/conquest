@@ -47,6 +47,11 @@ public class AggressiveBot implements Bot
 	FightAttackersResults aRes;
 	FightDefendersResults dRes;
 	
+	public AggressiveBot() {
+		aRes = FightAttackersResults.loadFromFile(new File("FightSimulation-Attackers-A200-D200.obj"));
+		dRes = FightDefendersResults.loadFromFile(new File("FightSimulation-Defenders-A200-D200.obj"));
+	}
+	
 	/**
 	 * A method used at the start of the game to decide which player start with what Regions. 6 Regions are required to be returned.
 	 * This example randomly picks 6 regions from the pickable starting Regions given by the engine.
@@ -55,9 +60,6 @@ public class AggressiveBot implements Bot
 	@Override
 	public ArrayList<RegionData> getPreferredStartingRegions(BotState state, Long timeOut)
 	{
-		aRes = FightAttackersResults.loadFromFile(new File("FightSimulation-Attackers-A200-D200.obj"));
-		dRes = FightDefendersResults.loadFromFile(new File("FightSimulation-Defenders-A200-D200.obj"));
-		
 		int m = 6;
 		
 		// GET ALL PICKABLE STARTING REGIONS
@@ -238,6 +240,7 @@ public class AggressiveBot implements Bot
 		config.engine.fight = FightMode.CONTINUAL_1_1_A60_D70;
 		
 		config.visualize = true;
+		config.forceHumanVisualization = true; // prepare for hijacking bot controls
 		
 		config.replayLog = new File("./replay.log");
 		
