@@ -14,13 +14,17 @@ import conquest.view.RegionInfo.Team;
 
 public class RegionInfo extends JPanel {
 	
+	public static final int[] HIGHLIGHT_RING_COLOR_RGB = new int[] { 255, 255, 255 };
+	
 	public static final int[] PLAYER_1_COLOR_RGB = new int[] { 255, 160, 160 };
 	public static final int[] PLAYER_2_COLOR_RGB = new int[] { 160, 160, 255 };
 	public static final int[] NEUTRAL_COLOR_RGB = new int[] { 240, 240, 240 };
 	
-	public static final int[] PLAYER_1_HIGHLIGHT_COLOR_RGB = new int[] { 255, 120, 120 };
-	public static final int[] PLAYER_2_HIGHLIGHT_COLOR_RGB = new int[] { 120, 120, 255 };
-	public static final int[] NEUTRAL_HIGHLIGHT_COLOR_RGB = new int[] { 220, 220, 220 };
+	public static final int[] PLAYER_1_HIGHLIGHT_COLOR_RGB = new int[] { 255, 180, 180 };
+	public static final int[] PLAYER_2_HIGHLIGHT_COLOR_RGB = new int[] { 180, 180, 255 };
+	public static final int[] NEUTRAL_HIGHLIGHT_COLOR_RGB = new int[] { 245, 245, 245 };
+	
+	public static final float[] HIGHLIGHT_RING_COLOR_HSB = Color.RGBtoHSB(HIGHLIGHT_RING_COLOR_RGB[0], HIGHLIGHT_RING_COLOR_RGB[1], HIGHLIGHT_RING_COLOR_RGB[2], null);
 	
 	public static final float[] PLAYER_1_COLOR_HSB = Color.RGBtoHSB(PLAYER_1_COLOR_RGB[0], PLAYER_1_COLOR_RGB[1], PLAYER_1_COLOR_RGB[2], null);
 	public static final float[] PLAYER_2_COLOR_HSB = Color.RGBtoHSB(PLAYER_2_COLOR_RGB[0], PLAYER_2_COLOR_RGB[1], PLAYER_2_COLOR_RGB[2], null);
@@ -157,7 +161,7 @@ public class RegionInfo extends JPanel {
         int width = this.getBounds().width; 
         
         if (highlight) {
-        	g.setColor(Color.WHITE);
+        	g.setColor(Color.getHSBColor(HIGHLIGHT_RING_COLOR_HSB[0], HIGHLIGHT_RING_COLOR_HSB[1], HIGHLIGHT_RING_COLOR_HSB[2]));
         	g.fillOval(width/2 - diam/2 - 4, 0, this.diam + 8, this.diam + 8);
         }
         

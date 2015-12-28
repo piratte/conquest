@@ -23,6 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import conquest.engine.Engine.EngineConfig;
 import conquest.engine.RunGame.Config;
 import conquest.engine.robot.RobotParser;
 import conquest.game.GameMap;
@@ -38,6 +39,24 @@ import conquest.view.GUI;
 
 public class Engine {
 	
+	public static enum FightMode {
+		
+		/**
+		 * Original Warlight fight without luck:
+		 * -- each attacking army has 60% chance to kill one defending army
+		 * -- each defending army has 70% chance to kill one attacking army
+		 */
+		ORIGINAL_A60_D70,
+
+		/**
+		 * RISK-like attack
+		 * -- fight happens in round until one of side is fully wiped out
+		 * -- each round there is a 60% chance that 1 defending army is killed and 70% chance that 1 attacking army is killed (independent variables)
+		 */
+		CONTINUAL_1_1_A60_D70
+		
+	}
+	
 	public static class EngineConfig {
 		
 		/**
@@ -52,6 +71,8 @@ public class Engine {
 		
 		public int startingArmies = 5;
 		public int maxGameRounds = 100;
+		
+		public FightMode fight = FightMode.ORIGINAL_A60_D70;
 		
 		public String asString() {
 			return seed + ";" + fullyObservableGame + ";" + botCommandTimeoutMillis + ";" + startingArmies + ";" + maxGameRounds;
@@ -90,9 +111,11 @@ public class Engine {
 	private Random random;
 	private int seed;
 	private boolean fullyObservableGame;
+	private EngineConfig config;
 
 	public Engine(GameMap initMap, Player player1, Player player2, GUI gui, EngineConfig config)
 	{
+		this.config = config;
 		if (config.seed < 0) {
 			config.seed = new Random().nextInt();
 		}
@@ -472,6 +495,18 @@ public class Engine {
 		}
 	}
 	
+	private static class FightResult {
+		public int attackersDestroyed;
+		public int defendersDestroyed;
+		
+		public FightResult(int attackersDestroyed, int defendersDestroyed) {
+			super();
+			this.attackersDestroyed = attackersDestroyed;
+			this.defendersDestroyed = defendersDestroyed;
+		}
+		
+	}
+	
 	//see wiki.warlight.net/index.php/Combat_Basics
 	private void doAttack(AttackTransferMove move)
 	{
@@ -480,59 +515,88 @@ public class Engine {
 		int attackingArmies;
 		int defendingArmies = toRegion.getArmies();
 		
-		int defendersDestroyed = 0;
-		int attackersDestroyed = 0;
-		
-		if(fromRegion.getArmies() > 1)
-		{
-			if(fromRegion.getArmies()-1 >= move.getArmies()) //are there enough armies on fromRegion?
-				attackingArmies = move.getArmies();
-			else
-				attackingArmies = fromRegion.getArmies()-1;
-			
-			for(int t=1; t<=attackingArmies; t++) //calculate how much defending armies are destroyed
-			{
-				double rand = random.nextDouble();
-				if(rand < 0.6) //60% chance to destroy one defending army
-					defendersDestroyed++;
-			}
-			for(int t=1; t<=defendingArmies; t++) //calculate how much attacking armies are destroyed
-			{
-				double rand = random.nextDouble();
-				if(rand < 0.7) //70% chance to destroy one attacking army
-					attackersDestroyed++;
-			}
-			
-			if(attackersDestroyed >= attackingArmies)
-			{
-				if(defendersDestroyed >= defendingArmies)
-					defendersDestroyed = defendingArmies - 1;
-				
-				attackersDestroyed = attackingArmies;
-			}		
-			
-			//process result of attack
-			if(defendersDestroyed >= defendingArmies) //attack success
-			{
-				fromRegion.setArmies(fromRegion.getArmies() - attackingArmies);
-				toRegion.setPlayerName(move.getPlayerName());
-				toRegion.setArmies(attackingArmies - attackersDestroyed);
-			}
-			else //attack fail
-			{
-				fromRegion.setArmies(fromRegion.getArmies() - attackersDestroyed);
-				toRegion.setArmies(toRegion.getArmies() - defendersDestroyed);
-			}
-			
-			if (gui != null) {
-				gui.attackResult(fromRegion, toRegion, attackersDestroyed, defendersDestroyed);
-			}
-			
-		}
-		else
+		if (fromRegion.getArmies() <= 1) {
 			move.setIllegalMove(move.getFromRegion().getId() + " attack " + "only has 1 army");
+			return;
+		}
+		
+		if(fromRegion.getArmies()-1 >= move.getArmies()) //are there enough armies on fromRegion?
+			attackingArmies = move.getArmies();
+		else
+			attackingArmies = fromRegion.getArmies()-1;
+		
+		FightResult result = null;
+		
+		switch (config.fight) {
+		case ORIGINAL_A60_D70:      result = doOriginalAttack(attackingArmies, defendingArmies, 0.6, 0.7);  break;
+		case CONTINUAL_1_1_A60_D70: result = doContinualAttack(attackingArmies, defendingArmies, 0.6, 0.7); break;
+		}
+		
+		int attackersDestroyed = result.attackersDestroyed;
+		int defendersDestroyed = result.defendersDestroyed;
+		
+		if(attackersDestroyed >= attackingArmies)
+		{
+			if (defendersDestroyed >= defendingArmies)
+				defendersDestroyed = defendingArmies - 1;
+			
+			attackersDestroyed = attackingArmies;
+		}		
+		
+		//process result of attack
+		if(defendersDestroyed >= defendingArmies) //attack success
+		{
+			fromRegion.setArmies(fromRegion.getArmies() - attackingArmies);
+			toRegion.setPlayerName(move.getPlayerName());
+			toRegion.setArmies(attackingArmies - attackersDestroyed);
+		}
+		else //attack fail
+		{
+			fromRegion.setArmies(fromRegion.getArmies() - attackersDestroyed);
+			toRegion.setArmies(toRegion.getArmies() - defendersDestroyed);
+		}
+		
+		if (gui != null) {
+			gui.attackResult(fromRegion, toRegion, attackersDestroyed, defendersDestroyed);
+		}
 	}
 	
+	
+
+	private FightResult doOriginalAttack(int attackingArmies, int defendingArmies, double defenderDestroyedChance, double attackerDestroyedChance) {
+		FightResult result = new FightResult(0, 0);
+		
+		for(int t=1; t<=attackingArmies; t++) //calculate how much defending armies are destroyed
+		{
+			double rand = random.nextDouble();
+			if(rand < defenderDestroyedChance) //60% chance to destroy one defending army
+				result.defendersDestroyed++;
+		}
+		for(int t=1; t<=defendingArmies; t++) //calculate how much attacking armies are destroyed
+		{
+			double rand = random.nextDouble();
+			if(rand < attackerDestroyedChance) //70% chance to destroy one attacking army
+				result.attackersDestroyed++;
+		}
+		return result;
+	}
+	
+	private FightResult doContinualAttack(int attackingArmies, int defendingArmies, double defenderDestroyedChance, double attackerDestroyedChance) {
+		FightResult result = new FightResult(0, 0);
+		
+		while (result.attackersDestroyed < attackingArmies && result.defendersDestroyed < defendingArmies) {
+			// ATTACKERS STRIKE
+			double rand = random.nextDouble();
+			if (rand < defenderDestroyedChance) ++result.defendersDestroyed;
+			
+			// DEFENDERS STRIKE
+			rand = random.nextDouble();
+			if (rand < attackerDestroyedChance) ++result.attackersDestroyed;
+		}
+		
+		return result;
+	}
+
 	public Player winningPlayer()
 	{
 		if(map.ownedRegionsByPlayer(player1).isEmpty())

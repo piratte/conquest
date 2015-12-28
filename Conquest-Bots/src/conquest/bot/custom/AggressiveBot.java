@@ -31,6 +31,7 @@ import conquest.bot.BotStarter;
 import conquest.bot.BotState;
 import conquest.bot.fight.FightSimulation.FightAttackersResults;
 import conquest.bot.fight.FightSimulation.FightDefendersResults;
+import conquest.engine.Engine.FightMode;
 import conquest.engine.RunGame;
 import conquest.engine.RunGame.Config;
 import conquest.engine.RunGame.GameResult;
@@ -228,10 +229,13 @@ public class AggressiveBot implements Bot
 		
 		config.bot1Init = "internal:conquest.bot.custom.AggressiveBot";
 		config.bot2Init = "internal:conquest.bot.BotStarter";
+		//config.bot2Init = "human";
 		
 		config.engine.botCommandTimeoutMillis = 24*60*60*1000;
 		
 		config.engine.maxGameRounds = 100;
+		
+		config.engine.fight = FightMode.CONTINUAL_1_1_A60_D70;
 		
 		config.visualize = true;
 		

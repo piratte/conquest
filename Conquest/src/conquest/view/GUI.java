@@ -276,7 +276,7 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			if (time < System.currentTimeMillis()) break;
+			if (continual && time < System.currentTimeMillis()) break; // skip if continual action and time out
 		}
 		clicked = false;
 	}
@@ -768,6 +768,7 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 			if (info.armiesPlus > 0) {
 				info.setArmies(info.getArmies() + info.armiesPlus);
 				info.setText("" + info.getArmies());
+				info.setHighlight(false);
 
 				PlaceArmiesMove command = new PlaceArmiesMove(playerName, new RegionData(region, region.id, null), info.armiesPlus);
 				info.armiesPlus = 0;
@@ -795,8 +796,10 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 		
 		if (info.armiesPlus > 0) {
 			info.setText(info.getArmies() + "+" + info.armiesPlus);
+			info.setHighlight(true);
 		} else {
 			info.setText(String.valueOf(info.getArmies()));
+			info.setHighlight(false);
 		}
 		
 		actionTxt.setText(placeArmiesPlayerName + ": place " + armiesLeft + " armies");
@@ -1165,18 +1168,18 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 					break;
 				}
 			}
-			if (command == null) {
-				for (AttackTransferMove cmd : moveArmies) {
-					if (cmd.getFromRegion().getRegion() == moveFrom) {
-						movePlayerArmies = cmd.getArmies();
-						moveArmies.remove(cmd);
-						moveTo = cmd.getToRegion().getRegion();
-						updateMoveArmies(-cmd.getArmies());
-						moveTo = region;
-						break;
-					}
-				}
-			}
+//			if (command == null) {
+//				for (AttackTransferMove cmd : moveArmies) {
+//					if (cmd.getFromRegion().getRegion() == moveFrom) {
+//						movePlayerArmies = cmd.getArmies();
+//						moveArmies.remove(cmd);
+//						moveTo = cmd.getToRegion().getRegion();
+//						updateMoveArmies(-cmd.getArmies());
+//						moveTo = region;
+//						break;
+//					}
+//				}
+//			}
 						
 			hidePlayerRegionButtonsExcept(moveFrom);
 			hideAllOtherButtons(null);
