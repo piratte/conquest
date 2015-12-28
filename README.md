@@ -20,11 +20,11 @@ FEATURES
 
 EXTRA GUI (KEYBOARD) CONTROLS
 
-+ N) skip to the next round
++ 'N') skip to the next round
 
-+ C) run continually (GUI won't wait for mouse click to advance to the next action, but auto-advance after some time)
++ 'C') run continually (GUI won't wait for mouse click to advance to the next action, but auto-advance after some time)
 
-+ + / -) Control how much time GUI will wait before it automatically advance to the next action (when enabled via 'C')
++ '+' / '-') Control how much time GUI will wait before it automatically advance to the next action (when enabled via 'C')
 
 EXTRA GUI (MOUSE) CONTROLS
 
