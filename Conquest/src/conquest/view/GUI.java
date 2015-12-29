@@ -1092,6 +1092,7 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 		for (RegionInfo info : regions) {
 			info.setText("" + info.getArmies());
 			info.armiesPlus = 0;
+			info.setHighlight(false);
 		}
 		
 		return moveArmies;
@@ -1190,6 +1191,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 			targetButton.setLabel(">>");	
 			
 			moveArmiesFinishedButton.setVisible(true);
+			
+			updateMoveArmiesHighlight();
 			return;
 		}
 		
@@ -1204,6 +1207,8 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 			targetButton.setLabel("X");
 			
 			moveArmiesFinishedButton.setVisible(false);
+			
+			updateMoveArmiesHighlight();			
 			return;
 		}
 		
@@ -1281,6 +1286,9 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 			
 			moveArmiesFinishedButton.setVisible(true);
 			
+			moveFrom = null;
+			updateMoveArmiesHighlight();
+			
 			return;
 		}
 		
@@ -1317,6 +1325,22 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 			to.setText(to.getArmies() + (to.armiesPlus > 0 ? " < " : " > ") + Math.abs(to.armiesPlus));
 		} else {
 			to.setText("" + to.getArmies());
+		}
+	}
+	
+	private void updateMoveArmiesHighlight() {
+		for (Region region : moveArmyPlayerRegions) {
+			RegionInfo info = regions[region.id-1];
+			boolean command = (moveFrom == region);
+			if (!command) {
+				for (AttackTransferMove move : moveArmies) {
+					if (move.getFromRegion().getRegion() == region) {
+						command = true;
+						break;
+					}
+				}
+			}
+			info.setHighlight(command);
 		}
 	}
 	
