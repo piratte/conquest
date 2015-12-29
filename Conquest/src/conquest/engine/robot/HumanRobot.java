@@ -44,7 +44,7 @@ public class HumanRobot implements Robot {
 		}
 		
 		if (config.gameLog != null) {
-			System.out.println(config.playerName + "-HUMAN <-- " + result);
+			System.out.println(config.playerName + "-Human <-- " + result);
 		}
 		
 		
@@ -66,7 +66,7 @@ public class HumanRobot implements Robot {
 		}
 		
 		if (config.gameLog != null) {
-			System.out.println(config.playerName + "-HUMAN <-- " + result);
+			System.out.println(config.playerName + "-Human <-- " + result);
 		}
 		
 		return result;
@@ -87,7 +87,7 @@ public class HumanRobot implements Robot {
 		}
 		
 		if (config.gameLog != null) {
-			System.out.println(config.playerName + "-HUMAN <-- " + result);
+			System.out.println(config.playerName + "-Human <-- " + result);
 		}
 		
 		return result;

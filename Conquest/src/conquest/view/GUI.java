@@ -103,16 +103,16 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 				{627,130},  //16. Scandinavia
 				{719,195},  //17. Ukraine
 				{560,255},  //18. Western Europe
-				{628,196}, //19. Northern Europe
-				{650,255}, //20. Southern Europe
+				{628,196},  //19. Northern Europe
+				{650,255},  //20. Southern Europe
 				{576,339},  //21. North Africa
-				{650,316},  //22. Egypt
+				{654,316},  //22. Egypt
 				{740,375},  //23. East Africa
 				{654,408},  //24. Congo
 				{657,478},  //25. South Africa
 				{736,465},  //26. Madagascar
 				{800,178},  //27. Ural
-				{880,136},  //28. Siberia
+				{865,116},  //28. Siberia
 				{972,110},  //29. Yakutsk
 				{1080,150}, //30. Kamchatka
 				{942,175},  //31. Irkutsk
