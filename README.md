@@ -28,7 +28,9 @@ EXTRA GUI (KEYBOARD) CONTROLS
 
 EXTRA GUI (MOUSE) CONTROLS
 
-+ Click the map to advance to the next action.
++ Left click the map to advance to the next action.
+
++ Right click the map to fast forward.
 
 AI vs AI
 
