@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import conquest.game.RegionData;
 import conquest.game.move.AttackTransferMove;
 import conquest.game.move.PlaceArmiesMove;
+import conquest.view.GUI;
 
 
 public class BotStarter implements Bot 
@@ -129,6 +130,10 @@ public class BotStarter implements Bot
 		return attackTransferMoves;
 	}
 
+	@Override
+	public void setGUI(GUI gui) {
+	}
+	
 	public static void main(String[] args)
 	{
 		BotParser parser = new BotParser(new BotStarter());

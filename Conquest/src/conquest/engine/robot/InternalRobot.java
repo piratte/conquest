@@ -53,7 +53,7 @@ public class InternalRobot implements Robot {
 	private InputOutputStream botInput;
 	private InputOutputStream botOutput;
 	
-	private Thread bot;
+	private BotParser bot;
 
 	private IORobot robot;
 
@@ -87,6 +87,8 @@ public class InternalRobot implements Robot {
 		if (config.gui != null) {
 			myKeyListener = new MyKeyListener();
 			config.gui.addKeyListener(myKeyListener);
+			
+			bot.getBot().setGUI(config.gui);
 		}
 	}
 	

@@ -1,20 +1,3 @@
-// Copyright 2014 theaigames.com (developers@theaigames.com)
-
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-
-//        http://www.apache.org/licenses/LICENSE-2.0
-
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
-//	
-//    For the full copyright and license information, please view the LICENSE
-//    file that was distributed with this source code.
-
 package conquest.bot.custom;
 
 import java.io.File;
@@ -40,6 +23,7 @@ import conquest.game.RegionData;
 import conquest.game.move.AttackTransferMove;
 import conquest.game.move.PlaceArmiesMove;
 import conquest.game.world.Continent;
+import conquest.view.GUI;
 
 
 public class AggressiveBot implements Bot 
@@ -50,6 +34,10 @@ public class AggressiveBot implements Bot
 	public AggressiveBot() {
 		aRes = FightAttackersResults.loadFromFile(new File("FightSimulation-Attackers-A200-D200.obj"));
 		dRes = FightDefendersResults.loadFromFile(new File("FightSimulation-Defenders-A200-D200.obj"));
+	}
+	
+	@Override
+	public void setGUI(GUI gui) {
 	}
 	
 	/**
@@ -177,8 +165,6 @@ public class AggressiveBot implements Bot
 		
 		return result;
 	}
-
-	
 
 	/**
 	 * This method is called for at the second part of each round. This example attacks if a region has

@@ -30,7 +30,7 @@ import conquest.game.move.AttackTransferMove;
 import conquest.game.move.PlaceArmiesMove;
 
 
-public class BotParser implements Runnable {
+public class BotParser extends Thread {
 	
 	final BotStreamReader input;	
 
@@ -60,7 +60,7 @@ public class BotParser implements Runnable {
 		this.currentState = new BotState();
 	}
 	
-	public static Thread runInternal(String playerName, String botFQCN, InputStream input, PrintStream output) {
+	public static BotParser runInternal(String playerName, String botFQCN, InputStream input, PrintStream output) {
 		Class botClass;
 		try {
 			botClass = Class.forName(botFQCN);
@@ -70,7 +70,7 @@ public class BotParser implements Runnable {
 		return runInternal(playerName, botClass, input, output);
 	}
 	
-	public static Thread runInternal(String playerName, Class botClass, InputStream input, PrintStream output) {
+	public static BotParser runInternal(String playerName, Class botClass, InputStream input, PrintStream output) {
 		Object botObj;
 		try {
 			botObj = botClass.getConstructor().newInstance();
@@ -84,11 +84,10 @@ public class BotParser implements Runnable {
 		return runInternal(playerName, bot, input, output);
 	}
 	
-	public static Thread runInternal(String playerName, Bot bot, InputStream input, PrintStream output) {
+	public static BotParser runInternal(String playerName, Bot bot, InputStream input, PrintStream output) {
 		BotParser parser = new BotParser(bot, input, output);
-		Thread botThread = new Thread(parser, playerName + "-Bot");
-		botThread.start();
-		return botThread;
+		parser.start();
+		return parser;
 	}
 	
 	private void log(String msg) {
@@ -97,6 +96,10 @@ public class BotParser implements Runnable {
 		}
 	}
 	
+	public Bot getBot() {
+		return bot;
+	}
+
 	@Override
 	public void run()
 	{
