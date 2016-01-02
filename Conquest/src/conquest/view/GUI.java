@@ -22,11 +22,11 @@ import javax.swing.SwingUtilities;
 
 import conquest.game.GameMap;
 import conquest.game.RegionData;
+import conquest.game.Team;
 import conquest.game.move.AttackTransferMove;
 import conquest.game.move.PlaceArmiesMove;
 import conquest.game.world.Continent;
 import conquest.game.world.Region;
-import conquest.view.RegionInfo.Team;
 import conquest.view.TriButton.ClickListener;
 
 
@@ -233,7 +233,7 @@ public class GUI extends JFrame implements MouseListener, KeyListener
                 
 	}
 	
-	public RegionInfo.Team getTeam(String player) {
+	public Team getTeam(String player) {
 		if (player.equals(playerName1)) return Team.PLAYER_1;
 		if (player.equals(playerName2)) return Team.PLAYER_2;
 		return Team.NEUTRAL;

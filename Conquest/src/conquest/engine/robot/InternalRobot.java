@@ -9,13 +9,9 @@ import java.util.ArrayList;
 
 import conquest.bot.BotParser;
 import conquest.engine.Robot;
-import conquest.engine.Robot.RobotConfig;
 import conquest.engine.io.InputOutputStream;
-import conquest.engine.replay.GameLog;
 import conquest.game.RegionData;
-import conquest.game.move.Move;
-import conquest.view.GUI;
-import conquest.view.RegionInfo.Team;
+import conquest.game.Team;
 
 
 public class InternalRobot implements Robot {

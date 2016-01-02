@@ -39,11 +39,11 @@ import conquest.game.ContinentData;
 import conquest.game.GameMap;
 import conquest.game.Player;
 import conquest.game.RegionData;
+import conquest.game.Team;
 import conquest.game.move.MoveResult;
 import conquest.game.world.Continent;
 import conquest.game.world.Region;
 import conquest.view.GUI;
-import conquest.view.RegionInfo.Team;
 
 public class RunGame
 {
@@ -616,7 +616,11 @@ public class RunGame
 		
 		config.engine.maxGameRounds = 100;
 		
+		// visualize the map, if turned off, the simulation would run headless 
 		config.visualize = true;
+		
+		// if false, not all human controls would be accessible (when hijacking bots via 'H' or 'J')
+		config.forceHumanVisualization = true;   
 		
 		config.replayLog = new File("./replay.log");
 		

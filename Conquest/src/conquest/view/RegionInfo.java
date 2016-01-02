@@ -1,57 +1,20 @@
 package conquest.view;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.Graphics;
 
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 
+import conquest.game.Team;
 import conquest.game.world.Region;
-import conquest.view.RegionInfo.Team;
 
 public class RegionInfo extends JPanel {
 	
 	public static final int[] HIGHLIGHT_RING_COLOR_RGB = new int[] { 255, 255, 255 };
-	
-	public static final int[] PLAYER_1_COLOR_RGB = new int[] { 255, 160, 160 };
-	public static final int[] PLAYER_2_COLOR_RGB = new int[] { 160, 160, 255 };
-	public static final int[] NEUTRAL_COLOR_RGB = new int[] { 240, 240, 240 };
-	
-	public static final int[] PLAYER_1_HIGHLIGHT_COLOR_RGB = new int[] { 255, 180, 180 };
-	public static final int[] PLAYER_2_HIGHLIGHT_COLOR_RGB = new int[] { 180, 180, 255 };
-	public static final int[] NEUTRAL_HIGHLIGHT_COLOR_RGB = new int[] { 245, 245, 245 };
-	
 	public static final float[] HIGHLIGHT_RING_COLOR_HSB = Color.RGBtoHSB(HIGHLIGHT_RING_COLOR_RGB[0], HIGHLIGHT_RING_COLOR_RGB[1], HIGHLIGHT_RING_COLOR_RGB[2], null);
 	
-	public static final float[] PLAYER_1_COLOR_HSB = Color.RGBtoHSB(PLAYER_1_COLOR_RGB[0], PLAYER_1_COLOR_RGB[1], PLAYER_1_COLOR_RGB[2], null);
-	public static final float[] PLAYER_2_COLOR_HSB = Color.RGBtoHSB(PLAYER_2_COLOR_RGB[0], PLAYER_2_COLOR_RGB[1], PLAYER_2_COLOR_RGB[2], null);
-	public static final float[] NEUTRAL_COLOR_HSB = Color.RGBtoHSB(NEUTRAL_COLOR_RGB[0], NEUTRAL_COLOR_RGB[1], NEUTRAL_COLOR_RGB[2], null);
-	public static final float[] PLAYER_1_HIGHLIGHT_COLOR_HSB = Color.RGBtoHSB(PLAYER_1_HIGHLIGHT_COLOR_RGB[0], PLAYER_1_HIGHLIGHT_COLOR_RGB[1], PLAYER_1_HIGHLIGHT_COLOR_RGB[2], null);
-	public static final float[] PLAYER_2_HIGHLIGHT_COLOR_HSB = Color.RGBtoHSB(PLAYER_2_HIGHLIGHT_COLOR_RGB[0], PLAYER_2_HIGHLIGHT_COLOR_RGB[1], PLAYER_2_HIGHLIGHT_COLOR_RGB[2], null);
-	public static final float[] NEUTRAL_HIGHLIGHT_COLOR_HSB = Color.RGBtoHSB(NEUTRAL_HIGHLIGHT_COLOR_RGB[0], NEUTRAL_HIGHLIGHT_COLOR_RGB[1], NEUTRAL_HIGHLIGHT_COLOR_RGB[2], null);
-	
-	
-	public static enum Team {
-		PLAYER_1(Color.getHSBColor(PLAYER_1_COLOR_HSB[0], PLAYER_1_COLOR_HSB[1], PLAYER_1_COLOR_HSB[2]),
-				 Color.getHSBColor(PLAYER_1_HIGHLIGHT_COLOR_HSB[0], PLAYER_1_HIGHLIGHT_COLOR_HSB[1], PLAYER_1_HIGHLIGHT_COLOR_HSB[2])),
-		PLAYER_2(Color.getHSBColor(PLAYER_2_COLOR_HSB[0], PLAYER_2_COLOR_HSB[1], PLAYER_2_COLOR_HSB[2]),
-				 Color.getHSBColor(PLAYER_2_HIGHLIGHT_COLOR_HSB[0], PLAYER_2_HIGHLIGHT_COLOR_HSB[1], PLAYER_2_HIGHLIGHT_COLOR_HSB[2])),
-				 
-		NEUTRAL(Color.getHSBColor(NEUTRAL_COLOR_HSB[0], NEUTRAL_COLOR_HSB[1], NEUTRAL_COLOR_HSB[2]),
-				Color.getHSBColor(NEUTRAL_HIGHLIGHT_COLOR_HSB[0], NEUTRAL_HIGHLIGHT_COLOR_HSB[1], NEUTRAL_HIGHLIGHT_COLOR_HSB[2]));
-		
-		public final Color color;
-		public final Color highlight;
-		
-		private Team(Color c, Color highlight) {
-			this.color = c;
-			this.highlight = highlight;
-		}		
-	}
-		
 	private int diam;
 	//private Color circleColor;
 	private JLabel txt;
@@ -166,9 +129,9 @@ public class RegionInfo extends JPanel {
         }
         
         if (highlight) {
-        	g.setColor(team.highlight);        	
+        	g.setColor(TeamView.getHighlightColor(team));        	
         } else {
-        	g.setColor(team.color);
+        	g.setColor(TeamView.getColor(team));
         }
         g.fillOval(width/2 - diam/2, 4, this.diam, this.diam);
         

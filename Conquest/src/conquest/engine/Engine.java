@@ -528,8 +528,8 @@ public class Engine {
 		FightResult result = null;
 		
 		switch (config.fight) {
-		case ORIGINAL_A60_D70:      result = doOriginalAttack(attackingArmies, defendingArmies, 0.6, 0.7);  break;
-		case CONTINUAL_1_1_A60_D70: result = doContinualAttack(attackingArmies, defendingArmies, 0.6, 0.7); break;
+		case ORIGINAL_A60_D70:      result = doOriginalAttack(random, attackingArmies, defendingArmies, 0.6, 0.7);  break;
+		case CONTINUAL_1_1_A60_D70: result = doContinualAttack(random, attackingArmies, defendingArmies, 0.6, 0.7); break;
 		}
 		
 		int attackersDestroyed = result.attackersDestroyed;
@@ -563,7 +563,7 @@ public class Engine {
 	
 	
 
-	private FightResult doOriginalAttack(int attackingArmies, int defendingArmies, double defenderDestroyedChance, double attackerDestroyedChance) {
+	public static FightResult doOriginalAttack(Random random, int attackingArmies, int defendingArmies, double defenderDestroyedChance, double attackerDestroyedChance) {
 		FightResult result = new FightResult(0, 0);
 		
 		for(int t=1; t<=attackingArmies; t++) //calculate how much defending armies are destroyed
@@ -581,7 +581,7 @@ public class Engine {
 		return result;
 	}
 	
-	private FightResult doContinualAttack(int attackingArmies, int defendingArmies, double defenderDestroyedChance, double attackerDestroyedChance) {
+	public static FightResult doContinualAttack(Random random, int attackingArmies, int defendingArmies, double defenderDestroyedChance, double attackerDestroyedChance) {
 		FightResult result = new FightResult(0, 0);
 		
 		while (result.attackersDestroyed < attackingArmies && result.defendersDestroyed < defendingArmies) {

@@ -21,8 +21,8 @@ import java.util.ArrayList;
 
 import conquest.engine.replay.GameLog;
 import conquest.game.RegionData;
+import conquest.game.Team;
 import conquest.view.GUI;
-import conquest.view.RegionInfo.Team;
 
 
 public interface Robot {
