@@ -14,6 +14,11 @@ import conquest.bot.BotStarter;
 import conquest.bot.BotState;
 import conquest.bot.fight.FightSimulation.FightAttackersResults;
 import conquest.bot.fight.FightSimulation.FightDefendersResults;
+import conquest.bot.map.FloydWarshall;
+import conquest.bot.map.RegionBFS;
+import conquest.bot.map.RegionBFS.BFSNode;
+import conquest.bot.map.RegionBFS.BFSVisitResult;
+import conquest.bot.map.RegionBFS.BFSVisitor;
 import conquest.engine.Engine.FightMode;
 import conquest.engine.RunGame;
 import conquest.engine.RunGame.Config;
@@ -23,15 +28,19 @@ import conquest.game.RegionData;
 import conquest.game.move.AttackTransferMove;
 import conquest.game.move.PlaceArmiesMove;
 import conquest.game.world.Continent;
+import conquest.game.world.Region;
 import conquest.view.GUI;
 
 
 public class AggressiveBot implements Bot 
 {
+	FloydWarshall fw;
+	
 	FightAttackersResults aRes;
 	FightDefendersResults dRes;
 	
 	public AggressiveBot() {
+		fw = new FloydWarshall();
 		aRes = FightAttackersResults.loadFromFile(new File("FightSimulation-Attackers-A200-D200.obj"));
 		dRes = FightDefendersResults.loadFromFile(new File("FightSimulation-Defenders-A200-D200.obj"));
 	}
@@ -84,6 +93,10 @@ public class AggressiveBot implements Bot
 		}
 	}
 	
+	Set<Region> myR      = new HashSet<Region>();
+	Set<Region> oppR     = new HashSet<Region>();
+	Set<Region> neutralR = new HashSet<Region>();
+	
 	Set<RegionData> my      = new HashSet<RegionData>();
 	Set<RegionData> opp     = new HashSet<RegionData>();
 	Set<RegionData> neutral = new HashSet<RegionData>();
@@ -92,7 +105,10 @@ public class AggressiveBot implements Bot
 	String oppName;
 	GameMap map;
 	
+	BotState state;
+	
 	private void updateInfos(BotState state) {
+		this.state = state;
 		this.map = state.getMap();
 		myName = state.getMyPlayerName();
 		oppName = state.getOpponentPlayerName();
@@ -100,13 +116,24 @@ public class AggressiveBot implements Bot
 		my.clear();
 		opp.clear();
 		neutral.clear();
+		myR.clear();
+		oppR.clear();
+		neutralR.clear();
 		
 		for (RegionData region : state.getMap().getRegions()) {
-			if (region.ownedByPlayer(myName)) my.add(region);
+			if (region.ownedByPlayer(myName)) {
+				my.add(region);
+				myR.add(region.getRegion());
+			}
 			else
-			if (region.ownedByPlayer(oppName)) opp.add(region);
-			else
+			if (region.ownedByPlayer(oppName)) {
+				opp.add(region);
+				oppR.add(region.getRegion());
+			}
+			else {
 			  neutral.add(region);
+			  neutralR.add(region.getRegion());
+			}
 		}
 	}
 	
@@ -186,14 +213,63 @@ public class AggressiveBot implements Bot
 			}
 		}
 		
+		for (RegionData from : my) {
+			if (hasOnlyMyNeighbours(from.getRegion()) && from.getArmies() > 1) {
+				result.add(moveToFront(from));
+			}
+		}
+		
 		return result;
 	}	
 	
+	private Region moveToFrontRegion;
+	
+	private AttackTransferMove moveToFront(RegionData from) {
+		RegionBFS bfs = new RegionBFS<BFSNode>();
+		moveToFrontRegion = null;
+		bfs.run(from.getRegion(), new BFSVisitor<BFSNode>() {
+
+			@Override
+			public BFSVisitResult<BFSNode> visit(Region region, int level, BFSNode parent, BFSNode thisNode) {
+				if (!hasOnlyMyNeighbours(region)) {
+					moveToFrontRegion = region;
+					return BFSVisitResult.TERMINATE;
+				}
+				return new BFSVisitResult<BFSNode>(thisNode == null ? new BFSNode() : thisNode);
+			}
+			
+		});
+		
+		if (moveToFrontRegion != null) {
+			List<Region> path = fw.getPath(from.getRegion(), moveToFrontRegion);
+			Region moveTo = path.get(1);
+			
+			boolean first = true;
+			for (Region region : path) {
+				if (first) first = false;
+				else System.out.print(" --> ");
+				System.out.print(region);
+			}
+			System.out.println();
+			
+			return transfer(state, from, map.getRegion(moveTo.id));
+		}
+		
+		return null;
+	}
+	
+	private boolean hasOnlyMyNeighbours(Region from) {
+		for (Region region : from.getNeighbours()) {			
+			if (!myR.contains(region)) return false;
+		}
+		return true;
+	}
+
 	private int getRequiredSoldiersToConquerRegion(RegionData from, RegionData to) {
 		int attackers = from.getArmies() - 1;
 		int defenders = to.getArmies();
 		
-		for (int a = 1; a <= attackers; ++a) {
+		for (int a = defenders; a <= attackers; ++a) {
 			double chance = aRes.getAttackersWinChance(a, defenders);
 			if (chance > 0.7) {
 				return a;
@@ -209,6 +285,11 @@ public class AggressiveBot implements Bot
 	
 	private AttackTransferMove attack(BotState state, RegionData from, RegionData to) {
 		AttackTransferMove result = new AttackTransferMove(state.getMyPlayerName(), from, to, getRequiredSoldiersToConquerRegion(from, to));
+		return result;
+	}
+	
+	private AttackTransferMove transfer(BotState state, RegionData from, RegionData to) {
+		AttackTransferMove result = new AttackTransferMove(state.getMyPlayerName(), from, to, from.getArmies()-1);
 		return result;
 	}
 

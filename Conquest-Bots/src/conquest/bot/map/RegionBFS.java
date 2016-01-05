@@ -152,9 +152,11 @@ public class RegionBFS<NODE extends BFSNode> {
 					node.addParent(parent.region);
 				}
 				
-				if (firstVisit.type == BFSVisitResultType.TERMINATE) return;
+				if (firstVisit.type == BFSVisitResultType.TERMINATE) {
+					return;
+				}
 				
-				if (newNode) queue.addLast(node);					
+				if (newNode && node != null) queue.addLast(node);					
 			}
 		}		
 	}
