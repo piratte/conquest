@@ -18,6 +18,7 @@ import conquest.bot.map.FloydWarshall;
 import conquest.bot.map.RegionBFS;
 import conquest.bot.map.RegionBFS.BFSNode;
 import conquest.bot.map.RegionBFS.BFSVisitResult;
+import conquest.bot.map.RegionBFS.BFSVisitResultType;
 import conquest.bot.map.RegionBFS.BFSVisitor;
 import conquest.engine.Engine.FightMode;
 import conquest.engine.RunGame;
@@ -225,15 +226,17 @@ public class AggressiveBot implements Bot
 	private Region moveToFrontRegion;
 	
 	private AttackTransferMove moveToFront(RegionData from) {
-		RegionBFS bfs = new RegionBFS<BFSNode>();
+		RegionBFS<BFSNode> bfs = new RegionBFS<BFSNode>();
 		moveToFrontRegion = null;
 		bfs.run(from.getRegion(), new BFSVisitor<BFSNode>() {
 
 			@Override
 			public BFSVisitResult<BFSNode> visit(Region region, int level, BFSNode parent, BFSNode thisNode) {
+				System.out.println((parent == null ? "START" : parent.level + ":" + parent.region) + " --> " + level + ":" + region);
+
 				if (!hasOnlyMyNeighbours(region)) {
 					moveToFrontRegion = region;
-					return BFSVisitResult.TERMINATE;
+					return new BFSVisitResult<BFSNode>(BFSVisitResultType.TERMINATE, thisNode == null ? new BFSNode() : thisNode);
 				}
 				return new BFSVisitResult<BFSNode>(thisNode == null ? new BFSNode() : thisNode);
 			}
@@ -241,7 +244,8 @@ public class AggressiveBot implements Bot
 		});
 		
 		if (moveToFrontRegion != null) {
-			List<Region> path = fw.getPath(from.getRegion(), moveToFrontRegion);
+			//List<Region> path = fw.getPath(from.getRegion(), moveToFrontRegion);
+			List<Region> path = bfs.getAllPaths(moveToFrontRegion).get(0);
 			Region moveTo = path.get(1);
 			
 			boolean first = true;

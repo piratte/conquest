@@ -76,7 +76,7 @@ public class RegionBFS<NODE extends BFSNode> {
 			this.node = node;
 		}
 		
-		protected BFSVisitResult(BFSVisitResultType type, NODE node) {
+		public BFSVisitResult(BFSVisitResultType type, NODE node) {
 			this.type = type;
 			this.node = node;
 		}
@@ -152,11 +152,11 @@ public class RegionBFS<NODE extends BFSNode> {
 					node.addParent(parent.region);
 				}
 				
-				if (firstVisit.type == BFSVisitResultType.TERMINATE) {
+				if (newNode && node != null) queue.addLast(node);
+				
+				if (result.type == BFSVisitResultType.TERMINATE) {
 					return;
 				}
-				
-				if (newNode && node != null) queue.addLast(node);					
 			}
 		}		
 	}
@@ -226,6 +226,12 @@ public class RegionBFS<NODE extends BFSNode> {
 			@Override
 			public BFSVisitResult<BFSNode> visit(Region region, int level, BFSNode parent, BFSNode thisNode) {
 				System.out.println((parent == null ? "START" : parent.level + ":" + parent.region) + " --> " + level + ":" + region);
+				// WE CAN IGNORE THE REGION
+				//return BFSVisitResult.IGNORE;
+				
+				// WE CAN TERMINATE PREMATURALY
+				//return BFSVisitResult.TERMINATE;
+				
 				return new BFSVisitResult<BFSNode>(thisNode == null ? new BFSNode() : thisNode);
 			}
 
