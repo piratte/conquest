@@ -18,6 +18,8 @@ FEATURES
 
 -- beware, some buttons can be "right clicked" to "reverse the effect" (e.g. when placing armies left click -> plus, right click -> minus or when moving armies left click -> OK, right click -> cancel)
 
+5) better GameState abstraction than plain BotState provided, use GameBot as a base class for your bots
+
 EXTRA GUI (KEYBOARD) CONTROLS
 
 + 'N') skip to the next round
@@ -39,6 +41,23 @@ AI vs AI
 HUMAN vs AI
 
 ![alt tag](https://github.com/kefik/conquest-engine-gui/raw/master/Conquest/screenshot-human.png)
+
+Bot code (non-complete) example taken from AggressiveBot:
+
+    // CAPTURE ALL REGIONS WE CAN
+	for (RegionState from : state.me.regions.values()) {
+    	for (RegionState to : from.neighbours) {
+    		// DO NOT ATTACK OWN REGIONS
+    		if (to.owned(Player.ME)) continue;
+    		
+    		// IF YOU HAVE ENOUGH ARMY TO WIN WITH 70%
+    		if (shouldAttack(from, to, 0.7)) {
+    			// => ATTACK
+    			result.add(attack(from, to, 0.7));
+    		}
+    	}
+    }
+
 ------------------------------------------------------------
 
 Compile Conquest project and run as follows (from within Conquest directory):
