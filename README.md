@@ -42,6 +42,8 @@ HUMAN vs AI
 
 ![alt tag](https://github.com/kefik/conquest-engine-gui/raw/master/Conquest/screenshot-human.png)
 
+------------------------------------------------------------
+
 Bot code (non-complete) example taken from AggressiveBot:
 
     // CAPTURE ALL REGIONS WE CAN
