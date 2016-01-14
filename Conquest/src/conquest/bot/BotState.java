@@ -46,6 +46,15 @@ public class BotState {
 		roundNumber = 0;
 	}
 	
+	/**
+	 * Useful to pretend "you are an opponent" for the purpose of computing the GameState from the perspective of your opponent.
+	 */
+	public void swapNames() {
+		String name = myName;
+		myName = opponentName;
+		opponentName = name;
+	}
+	
 	public void updateSettings(String key, String value)
 	{
 		if(key.equals("your_bot")) //bot's own name

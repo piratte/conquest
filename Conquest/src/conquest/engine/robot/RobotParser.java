@@ -20,7 +20,7 @@ package conquest.engine.robot;
 import java.util.ArrayList;
 
 import conquest.game.GameMap;
-import conquest.game.Player;
+import conquest.game.EnginePlayer;
 import conquest.game.RegionData;
 import conquest.game.move.AttackTransferMove;
 import conquest.game.move.Move;
@@ -36,7 +36,7 @@ public class RobotParser {
 		this.map = map;
 	}
 	
-	public ArrayList<Move> parseMoves(String input, Player player)
+	public ArrayList<Move> parseMoves(String input, EnginePlayer player)
 	{
 		ArrayList<Move> moves = new ArrayList<Move>();
 		
@@ -65,7 +65,7 @@ public class RobotParser {
 	}
 
 	//returns the correct Move. Null if input is incorrect.
-	private Move parseMove(String input, Player player)
+	private Move parseMove(String input, EnginePlayer player)
 	{
 		int armies = -1;
 		
@@ -111,7 +111,7 @@ public class RobotParser {
 	}
 	
 	//parse the region given the id string.
-	private RegionData parseRegion(String regionId, String input, Player player)
+	private RegionData parseRegion(String regionId, String input, EnginePlayer player)
 	{
 		int id = -1;
 		RegionData region;
@@ -124,7 +124,7 @@ public class RobotParser {
 		return region;
 	}
 	
-	public ArrayList<RegionData> parsePreferredStartingRegions(String input, ArrayList<RegionData> pickableRegions, Player player)
+	public ArrayList<RegionData> parsePreferredStartingRegions(String input, ArrayList<RegionData> pickableRegions, EnginePlayer player)
 	{
 		ArrayList<RegionData> preferredStartingRegions = new ArrayList<RegionData>();
 
@@ -166,7 +166,7 @@ public class RobotParser {
 		}
 	}
 
-	private void errorOut(String error, String input, Player player)
+	private void errorOut(String error, String input, EnginePlayer player)
 	{
 		//player.getBot().addToDump("Parse error: " + error + " (" + input + ")");
 	}

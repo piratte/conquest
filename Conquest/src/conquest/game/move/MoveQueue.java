@@ -19,7 +19,7 @@ package conquest.game.move;
 import java.util.ArrayList;
 import java.util.Random;
 
-import conquest.game.Player;
+import conquest.game.EnginePlayer;
 
 
 
@@ -28,12 +28,12 @@ public class MoveQueue {
 	public ArrayList<PlaceArmiesMove> placeArmiesMoves;
 	public ArrayList<AttackTransferMove> attackTransferMovesP1;
 	public ArrayList<AttackTransferMove> attackTransferMovesP2;
-	private Player player1, player2;
+	private EnginePlayer player1, player2;
 	private Random random;
 	// public final int ORDER_RANDOM = 1;
 	// public final int ORDER_CYCLIC = 2;
 	
-	public MoveQueue(Player player1, Player player2, Random random)
+	public MoveQueue(EnginePlayer player1, EnginePlayer player2, Random random)
 	{
 		this.placeArmiesMoves = new ArrayList<PlaceArmiesMove>();
 		this.attackTransferMovesP1 = new ArrayList<AttackTransferMove>();

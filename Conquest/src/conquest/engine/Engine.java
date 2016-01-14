@@ -27,7 +27,7 @@ import conquest.engine.Engine.EngineConfig;
 import conquest.engine.RunGame.Config;
 import conquest.engine.robot.RobotParser;
 import conquest.game.GameMap;
-import conquest.game.Player;
+import conquest.game.EnginePlayer;
 import conquest.game.RegionData;
 import conquest.game.ContinentData;
 import conquest.game.move.AttackTransferMove;
@@ -94,8 +94,8 @@ public class Engine {
 		
 	}
 	
-	private Player player1;
-	private Player player2;
+	private EnginePlayer player1;
+	private EnginePlayer player2;
 	private GameMap map;
 	private RobotParser parser;
 	private int roundNr;
@@ -113,7 +113,7 @@ public class Engine {
 	private boolean fullyObservableGame;
 	private EngineConfig config;
 
-	public Engine(GameMap initMap, Player player1, Player player2, GUI gui, EngineConfig config)
+	public Engine(GameMap initMap, EnginePlayer player1, EnginePlayer player2, GUI gui, EngineConfig config)
 	{
 		this.config = config;
 		if (config.seed < 0) {
@@ -270,7 +270,7 @@ public class Engine {
 		return startingRegions;
 	}
 	
-	private void getMoves(String movesInput, Player player)
+	private void getMoves(String movesInput, EnginePlayer player)
 	{
 		ArrayList<Move> moves = parser.parseMoves(movesInput, player);
 		
@@ -295,7 +295,7 @@ public class Engine {
 		if(plm == null) { System.err.println("Error on place_armies input."); return; }
 		
 		RegionData region = plm.getRegion();
-		Player player = getPlayer(plm.getPlayerName());
+		EnginePlayer player = getPlayer(plm.getPlayerName());
 		int armies = plm.getArmies();
 		
 		//check legality
@@ -328,7 +328,7 @@ public class Engine {
 		
 		RegionData fromRegion = atm.getFromRegion();
 		RegionData toRegion = atm.getToRegion();
-		Player player = getPlayer(atm.getPlayerName());
+		EnginePlayer player = getPlayer(atm.getPlayerName());
 		int armies = atm.getArmies();
 		
 		//check legality
@@ -412,7 +412,7 @@ public class Engine {
 				RegionData fromRegion = move.getFromRegion();
 				RegionData oldFromRegion = oldMap.getRegion(move.getFromRegion().getId());
 				RegionData toRegion = move.getToRegion();
-				Player player = getPlayer(move.getPlayerName());
+				EnginePlayer player = getPlayer(move.getPlayerName());
 				
 				if(fromRegion.ownedByPlayer(player.getName())) //check if the fromRegion still belongs to this player
 				{
@@ -597,7 +597,7 @@ public class Engine {
 		return result;
 	}
 
-	public Player winningPlayer()
+	public EnginePlayer winningPlayer()
 	{
 		if(map.ownedRegionsByPlayer(player1).isEmpty())
 			return player2;
@@ -615,7 +615,7 @@ public class Engine {
 		
 		for(ContinentData superRegion : map.getContinents())
 		{
-			Player player = getPlayer(superRegion.ownedByPlayer());
+			EnginePlayer player = getPlayer(superRegion.ownedByPlayer());
 			if(player != null)
 				player.setArmiesLeft(player.getArmiesLeft() + superRegion.getArmiesReward());
 		}
@@ -634,7 +634,7 @@ public class Engine {
 	}
 		
 	//inform the player about how much armies he can place at the start next round
-	private void sendStartingArmiesInfo(Player player)
+	private void sendStartingArmiesInfo(EnginePlayer player)
 	{
 		String updateStartingArmiesString = "settings starting_armies";
 		
@@ -645,7 +645,7 @@ public class Engine {
 	}
 	
 	//inform the player about how his visible map looks now
-	private void sendUpdateMapInfo(Player player)
+	private void sendUpdateMapInfo(EnginePlayer player)
 	{
 		LinkedList<RegionData> visibleRegions;
 		if (fullyObservableGame) {
@@ -665,7 +665,7 @@ public class Engine {
 		player.getBot().writeInfo(updateMapString);
 	}
 
-	private void sendOpponentMovesInfo(Player player)
+	private void sendOpponentMovesInfo(EnginePlayer player)
 	{
 		String opponentMovesString = "opponent_moves ";
 		LinkedList<Move> opponentMoves = new LinkedList<Move>();
@@ -695,7 +695,7 @@ public class Engine {
 		player.getBot().writeInfo(opponentMovesString);
 	}
 	
-	private Player getPlayer(String playerName)
+	private EnginePlayer getPlayer(String playerName)
 	{
 		if(player1.getName().equals(playerName))
 			return player1;

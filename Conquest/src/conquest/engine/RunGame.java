@@ -37,7 +37,7 @@ import conquest.engine.robot.InternalRobot;
 import conquest.engine.robot.ProcessRobot;
 import conquest.game.ContinentData;
 import conquest.game.GameMap;
-import conquest.game.Player;
+import conquest.game.EnginePlayer;
 import conquest.game.RegionData;
 import conquest.game.Team;
 import conquest.game.move.MoveResult;
@@ -165,15 +165,15 @@ public class RunGame
 			
 			this.config.engine = replay.getConfig().engine;
 			
-			Player player1, player2;
+			EnginePlayer player1, player2;
 			Robot robot1, robot2;
 			
 			//setup the bots: bot1, bot2
 			robot1 = new IORobot(replay);
 			robot2 = new IORobot(replay);
 					
-			player1 = new Player(config.playerName1, robot1, config.engine.startingArmies);
-			player2 = new Player(config.playerName2, robot2, config.engine.startingArmies);
+			player1 = new EnginePlayer(config.playerName1, robot1, config.engine.startingArmies);
+			player2 = new EnginePlayer(config.playerName2, robot2, config.engine.startingArmies);
 			
 			return go(null, player1, player2, robot1, robot2);
 		} catch (Exception e) {
@@ -191,15 +191,15 @@ public class RunGame
 			
 			System.out.println("starting game " + config.gameId);
 			
-			Player player1, player2;
+			EnginePlayer player1, player2;
 			Robot robot1, robot2;
 			
 			//setup the bots: bot1, bot2
 			robot1 = setupRobot(config.playerName1, config.bot1Init);
 			robot2 = setupRobot(config.playerName2, config.bot2Init);
 					
-			player1 = new Player(config.playerName1, robot1, config.engine.startingArmies);
-			player2 = new Player(config.playerName2, robot2, config.engine.startingArmies);
+			player1 = new EnginePlayer(config.playerName1, robot1, config.engine.startingArmies);
+			player2 = new EnginePlayer(config.playerName2, robot2, config.engine.startingArmies);
 						
 			return go(log, player1, player2, robot1, robot2);
 		} catch (Exception e) {
@@ -207,7 +207,7 @@ public class RunGame
 		}
 	}
 
-	private GameResult go(GameLog log, Player player1, Player player2, Robot robot1, Robot robot2) throws InterruptedException {
+	private GameResult go(GameLog log, EnginePlayer player1, EnginePlayer player2, Robot robot1, Robot robot2) throws InterruptedException {
 		
 		//setup the map
 		GameMap initMap, map;

@@ -19,14 +19,14 @@ package conquest.game;
 
 import conquest.engine.Robot;
 
-public class Player {
+public class EnginePlayer {
 	
 	private String name;
 	private Robot bot;
 	private int armiesPerTurn; 
 	private int armiesLeft;    //variable armies that can be added, changes with superRegions fully owned and moves already placed.
 	
-	public Player(String name, Robot bot, int startingArmies)
+	public EnginePlayer(String name, Robot bot, int startingArmies)
 	{
 		this.name = name;
 		this.bot = bot;

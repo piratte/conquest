@@ -4,44 +4,41 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import conquest.bot.Bot;
 import conquest.bot.BotParser;
 import conquest.bot.BotStarter;
 import conquest.bot.BotState;
 import conquest.bot.fight.FightSimulation.FightAttackersResults;
 import conquest.bot.fight.FightSimulation.FightDefendersResults;
-import conquest.bot.map.FloydWarshall;
+import conquest.bot.map.Player;
 import conquest.bot.map.RegionBFS;
 import conquest.bot.map.RegionBFS.BFSNode;
 import conquest.bot.map.RegionBFS.BFSVisitResult;
 import conquest.bot.map.RegionBFS.BFSVisitResultType;
 import conquest.bot.map.RegionBFS.BFSVisitor;
+import conquest.bot.state.ChooseCommand;
+import conquest.bot.state.GameBot;
+import conquest.bot.state.GameState.RegionState;
+import conquest.bot.state.MoveCommand;
+import conquest.bot.state.PlaceCommand;
 import conquest.engine.Engine.FightMode;
 import conquest.engine.RunGame;
 import conquest.engine.RunGame.Config;
 import conquest.engine.RunGame.GameResult;
-import conquest.game.GameMap;
 import conquest.game.RegionData;
 import conquest.game.move.AttackTransferMove;
-import conquest.game.move.PlaceArmiesMove;
 import conquest.game.world.Continent;
 import conquest.game.world.Region;
 import conquest.view.GUI;
 
-
-public class AggressiveBot implements Bot 
+public class AggressiveBot extends GameBot 
 {
-	FloydWarshall fw;
 	
 	FightAttackersResults aRes;
 	FightDefendersResults dRes;
 	
 	public AggressiveBot() {
-		fw = new FloydWarshall();
 		aRes = FightAttackersResults.loadFromFile(new File("FightSimulation-Attackers-A200-D200.obj"));
 		dRes = FightDefendersResults.loadFromFile(new File("FightSimulation-Defenders-A200-D200.obj"));
 	}
@@ -50,36 +47,34 @@ public class AggressiveBot implements Bot
 	public void setGUI(GUI gui) {
 	}
 	
-	/**
-	 * A method used at the start of the game to decide which player start with what Regions. 6 Regions are required to be returned.
-	 * This example randomly picks 6 regions from the pickable starting Regions given by the engine.
-	 * @return : a list of m (m=6) Regions starting with the most preferred Region and ending with the least preferred Region to start with 
-	 */
+	// ================
+	// CHOOSING REGIONS
+	// ================
+	
 	@Override
-	public ArrayList<RegionData> getPreferredStartingRegions(BotState state, Long timeOut)
-	{
+	public List<ChooseCommand> chooseRegions(List<Region> choosable, long timeout) {
 		int m = 6;
 		
-		// GET ALL PICKABLE STARTING REGIONS
-		ArrayList<RegionData> preferredStartingRegions = new ArrayList<RegionData>();
-		preferredStartingRegions.addAll(state.getPickableStartingRegions());
-		
-		// SORT THEM ACCORDING TO THE PRIORITY ... see: getPrefferedContinentPriority(Continent)
-		Collections.sort(preferredStartingRegions, new Comparator<RegionData>() {
+		// SORT PICKABLE REGIONS ACCORDING TO THE PRIORITY
+		Collections.sort(choosable, new Comparator<Region>() {
 			@Override
-			public int compare(RegionData o1, RegionData o2) {
-				int priority1 = getPrefferedContinentPriority(o1.getContinent());
-				int priority2 = getPrefferedContinentPriority(o2.getContinent());
-				
+			public int compare(Region o1, Region o2) {
+				int priority1 = getPrefferedContinentPriority(o1.continent);
+				int priority2 = getPrefferedContinentPriority(o2.continent);				
 				return priority1 - priority2;
 			}
 		});
 		
-		
 		// REMOVE CONTINENT WE DO NOT WANT
-		while (preferredStartingRegions.size() > m) preferredStartingRegions.remove(preferredStartingRegions.size()-1);
-				
-		return preferredStartingRegions;
+		while (choosable.size() > m) choosable.remove(choosable.size()-1);
+		
+		// CREATE COMMANDS
+		List<ChooseCommand> result = new ArrayList<ChooseCommand>(choosable.size());
+		for (Region region : choosable) {
+			result.add(new ChooseCommand(region));
+		}
+		
+		return result;
 	}
 	
 	public int getPrefferedContinentPriority(Continent continent) {
@@ -93,69 +88,23 @@ public class AggressiveBot implements Bot
 		default:            return 7;
 		}
 	}
+
+	// ==============
+	// PLACING ARMIES
+	// ==============
 	
-	Set<Region> myR      = new HashSet<Region>();
-	Set<Region> oppR     = new HashSet<Region>();
-	Set<Region> neutralR = new HashSet<Region>();
-	
-	Set<RegionData> my      = new HashSet<RegionData>();
-	Set<RegionData> opp     = new HashSet<RegionData>();
-	Set<RegionData> neutral = new HashSet<RegionData>();
-	
-	String myName;
-	String oppName;
-	GameMap map;
-	
-	BotState state;
-	
-	private void updateInfos(BotState state) {
-		this.state = state;
-		this.map = state.getMap();
-		myName = state.getMyPlayerName();
-		oppName = state.getOpponentPlayerName();
-		
-		my.clear();
-		opp.clear();
-		neutral.clear();
-		myR.clear();
-		oppR.clear();
-		neutralR.clear();
-		
-		for (RegionData region : state.getMap().getRegions()) {
-			if (region.ownedByPlayer(myName)) {
-				my.add(region);
-				myR.add(region.getRegion());
-			}
-			else
-			if (region.ownedByPlayer(oppName)) {
-				opp.add(region);
-				oppR.add(region.getRegion());
-			}
-			else {
-			  neutral.add(region);
-			  neutralR.add(region.getRegion());
-			}
-		}
-	}
-	
-	/**
-	 * This method is called for at first part of each round. This example puts two armies on random regions
-	 * until he has no more armies left to place.
-	 * @return The list of PlaceArmiesMoves for one round
-	 */
 	@Override
-	public ArrayList<PlaceArmiesMove> getPlaceArmiesMoves(BotState state, Long timeOut) 
-	{
-		ArrayList<PlaceArmiesMove> result = new ArrayList<PlaceArmiesMove>();
+	public List<PlaceCommand> placeArmies(long timeout) {
+		List<PlaceCommand> result = new ArrayList<PlaceCommand>();
 		
-		updateInfos(state);
+		// CLONE REGIONS OWNED BY ME
+		List<RegionState> mine = new ArrayList<RegionState>(state.me.regions.values());
 		
-		List<RegionData> myReg = new ArrayList<RegionData>(my);
-		
-		Collections.sort(myReg, new Comparator<RegionData>() {
+		// SORT THEM ACCORDING TO THEIR SCORE
+		Collections.sort(mine, new Comparator<RegionState>() {
 
 			@Override
-			public int compare(RegionData o1, RegionData o2) {
+			public int compare(RegionState o1, RegionState o2) {
 				int regionScore1 = getRegionScore(o1);
 				int regionScore2 = getRegionScore(o2);
 				return regionScore2 - regionScore1;
@@ -163,78 +112,115 @@ public class AggressiveBot implements Bot
 
 		});
 		
-		
 		// DO NOT ADD SOLDIER TO REGIONS THAT HAS SCORE 0 (not perspective)
 		int i = 0;
-		while (i < myReg.size() && getRegionScore(myReg.get(i)) > 0) ++i;
-		while (i < myReg.size()) myReg.remove(i);
-		
-		int armiesLeft = state.getStartingArmies();
+		while (i < mine.size() && getRegionScore(mine.get(i)) > 0) ++i;
+		while (i < mine.size()) mine.remove(i);
+
+		// DISTRIBUTE ARMIES
+		int armiesLeft = state.me.placeArmies;
 		
 		int index = 0;
 		
 		while (armiesLeft > 0) {
-			result.add(new PlaceArmiesMove(myName, myReg.get(index), 3));
+			result.add(new PlaceCommand(mine.get(index).region, 3));
 			armiesLeft -= 3;
 			++index;
-			if (index >= myReg.size()) index = 0;
+			if (index >= mine.size()) index = 0;
 		}
 		
 		return result;
 	}
 	
-	private int getRegionScore(RegionData o1) {
+	private int getRegionScore(RegionState o1) {
 		int result = 0;
 		
-		for (RegionData reg : o1.getNeighbors()) {
-			result += (neutral.contains(reg) ? 1 : 0) * 5;
-			result += (opp.contains(reg) ? 1 : 0) * 2;
+		for (Region reg : o1.region.getNeighbours()) {
+			result += (state.region(reg).owned(Player.NEUTRAL) ? 1 : 0) * 5;
+			result += (state.region(reg).owned(Player.OPPONENT) ? 1 : 0) * 2;
 		}
 		
 		return result;
 	}
 
-	/**
-	 * This method is called for at the second part of each round. This example attacks if a region has
-	 * more than 6 armies on it, and transfers if it has less than 6 and a neighboring owned region.
-	 * @return The list of PlaceArmiesMoves for one round
-	 */
+	// =============
+	// MOVING ARMIES
+	// =============
+
 	@Override
-	public ArrayList<AttackTransferMove> getAttackTransferMoves(BotState state, Long timeOut) 
-	{
-		ArrayList<AttackTransferMove> result = new ArrayList<AttackTransferMove>();
+	public List<MoveCommand> moveArmies(long timeout) {
+		List<MoveCommand> result = new ArrayList<MoveCommand>();
 		
-		for (RegionData from : my) {
-			for (RegionData to : from.getNeighbors()) {
-				if (!to.ownedByPlayer(myName)) {
-					if (shouldAttack(from, to)) {
-						result.add(attack(state, from, to));
-					}
+		// CAPTURE ALL REGIONS WE CAN
+		for (RegionState from : state.me.regions.values()) {
+			for (RegionState to : from.neighbours) {
+				// DO NOT ATTACK OWN REGIONS
+				if (to.owned(Player.ME)) continue;
+				
+				// IF YOU HAVE ENOUGH ARMY TO WIN WITH 70%
+				if (shouldAttack(from, to, 0.7)) {
+					// => ATTACK
+					result.add(attack(from, to, 0.7));
 				}
 			}
 		}
 		
-		for (RegionData from : my) {
-			if (hasOnlyMyNeighbours(from.getRegion()) && from.getArmies() > 1) {
+		// MOVE LEFT OVERS CLOSER TO THE FRONT
+		for (RegionState from : state.me.regions.values()) {
+			if (hasOnlyMyNeighbours(from) && from.armies > 1) {
 				result.add(moveToFront(from));
 			}
 		}
 		
 		return result;
-	}	
+	}
+	
+	private boolean hasOnlyMyNeighbours(RegionState from) {
+		for (RegionState region : from.neighbours) {			
+			if (!region.owned(Player.ME)) return false;
+		}
+		return true;
+	}
+
+	private int getRequiredSoldiersToConquerRegion(RegionState from, RegionState to, double winProbability) {
+		int attackers = from.armies - 1;
+		int defenders = to.armies;
+		
+		for (int a = defenders; a <= attackers; ++a) {
+			double chance = aRes.getAttackersWinChance(a, defenders);
+			if (chance >= winProbability) {
+				return a;
+			}
+		}
+		
+		return Integer.MAX_VALUE;
+	}
+		
+	private boolean shouldAttack(RegionState from, RegionState to, double winProbability) {	
+		return from.armies > getRequiredSoldiersToConquerRegion(from, to, winProbability);
+	}
+	
+	private MoveCommand attack(RegionState from, RegionState to, double winProbability) {
+		MoveCommand result = new MoveCommand(from.region, to.region, getRequiredSoldiersToConquerRegion(from, to, winProbability));
+		return result;
+	}
+	
+	private MoveCommand transfer(RegionState from, RegionState to) {
+		MoveCommand result = new MoveCommand(from.region, to.region, from.armies-1);
+		return result;
+	}
 	
 	private Region moveToFrontRegion;
 	
-	private AttackTransferMove moveToFront(RegionData from) {
+	private MoveCommand moveToFront(RegionState from) {
 		RegionBFS<BFSNode> bfs = new RegionBFS<BFSNode>();
 		moveToFrontRegion = null;
-		bfs.run(from.getRegion(), new BFSVisitor<BFSNode>() {
+		bfs.run(from.region, new BFSVisitor<BFSNode>() {
 
 			@Override
 			public BFSVisitResult<BFSNode> visit(Region region, int level, BFSNode parent, BFSNode thisNode) {
-				System.out.println((parent == null ? "START" : parent.level + ":" + parent.region) + " --> " + level + ":" + region);
-
-				if (!hasOnlyMyNeighbours(region)) {
+				//System.out.println((parent == null ? "START" : parent.level + ":" + parent.region) + " --> " + level + ":" + region);
+				if (!hasOnlyMyNeighbours(state.region(region))) {
 					moveToFrontRegion = region;
 					return new BFSVisitResult<BFSNode>(BFSVisitResultType.TERMINATE, thisNode == null ? new BFSNode() : thisNode);
 				}
@@ -256,47 +242,13 @@ public class AggressiveBot implements Bot
 			}
 			System.out.println();
 			
-			return transfer(state, from, map.getRegion(moveTo.id));
+			return transfer(from, state.region(moveTo));
 		}
 		
 		return null;
 	}
 	
-	private boolean hasOnlyMyNeighbours(Region from) {
-		for (Region region : from.getNeighbours()) {			
-			if (!myR.contains(region)) return false;
-		}
-		return true;
-	}
-
-	private int getRequiredSoldiersToConquerRegion(RegionData from, RegionData to) {
-		int attackers = from.getArmies() - 1;
-		int defenders = to.getArmies();
-		
-		for (int a = defenders; a <= attackers; ++a) {
-			double chance = aRes.getAttackersWinChance(a, defenders);
-			if (chance > 0.7) {
-				return a;
-			}
-		}
-		
-		return Integer.MAX_VALUE;
-	}
-		
-	private boolean shouldAttack(RegionData from, RegionData to) {	
-		return from.getArmies() > getRequiredSoldiersToConquerRegion(from, to);
-	}
 	
-	private AttackTransferMove attack(BotState state, RegionData from, RegionData to) {
-		AttackTransferMove result = new AttackTransferMove(state.getMyPlayerName(), from, to, getRequiredSoldiersToConquerRegion(from, to));
-		return result;
-	}
-	
-	private AttackTransferMove transfer(BotState state, RegionData from, RegionData to) {
-		AttackTransferMove result = new AttackTransferMove(state.getMyPlayerName(), from, to, from.getArmies()-1);
-		return result;
-	}
-
 	public static void runInternal() {
 		Config config = new Config();
 		

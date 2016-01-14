@@ -1,26 +1,30 @@
 package conquest.bot.state;
 
-import conquest.bot.map.RegionOwner;
+import conquest.bot.map.Player;
 import conquest.game.world.Region;
 
 public class AttackCommand implements Cloneable {
 
 	public Region from;
-	public RegionOwner fromOwner;
+	public Player fromOwner;
 	
 	public Region to;
-	public RegionOwner toOwner;
+	public Player toOwner;
 	
 	public int armies;
 	
 	public int attackersCasaulties;
 	public int defendersCasaulties;
 	
-	public AttackCommand(Region from, RegionOwner fromOwner, Region to, RegionOwner toOwner, int armies) {
+	public AttackCommand(Region from, Player fromOwner, Region to, Player toOwner, int armies) {
 		this(from, fromOwner, to, toOwner, armies, -1, -1);
 	}
 	
-	public AttackCommand(Region from, RegionOwner fromOwner, Region to, RegionOwner toOwner, int armies, int attackersCasaulties, int defendersCasaulties) {
+	public AttackCommand(GameState state, MoveCommand move) {
+		this(move.from, state.region(move.from).owner.player, move.to, state.region(move.to).owner.player, move.armies);
+	}
+	
+	public AttackCommand(Region from, Player fromOwner, Region to, Player toOwner, int armies, int attackersCasaulties, int defendersCasaulties) {
 		this.from = from;
 		this.fromOwner = fromOwner;
 		
