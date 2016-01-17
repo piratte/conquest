@@ -76,27 +76,43 @@ public class FightSimulation {
 			super(attackersMax, defendersMax, attackerDieChance, defenderDieChance, computationAttackersWinChanceTrim);		
 			this.attackersWinChanceTrim = attackersWinChanceTrim;
 		}
-				
-		public double getAttackersWinChance(int attackers, int defenders) {
-			if (results[attackers][defenders] == null) return 0;
-			return results[attackers][defenders].attackersWinChance;
-		}
-		
-		public double getDefendersWinChance(int attackers, int defenders) {
-			if (results[attackers][defenders] == null) return 1;
-			return results[attackers][defenders].defendersWinChance;
-		}
-		
-		public double getExpectedAttackersDeaths(int attackers, int defenders) {
-			if (results[attackers][defenders] == null) return attackers;
-			return results[attackers][defenders].expectedAttackersDeaths;
-		}
-		
-		public Double getExpectedDefendersDeaths(int attackers, int defenders) {
-			if (results[attackers][defenders] == null) return null;
-			return results[attackers][defenders].expectedDefendersDeaths;
-		}
-		
+
+        public double getAttackersWinChance(int attackers, int defenders) {
+            try {
+                if (results[attackers][defenders] == null) return 0.0;
+                return results[attackers][defenders].attackersWinChance;
+            } catch (Exception e) {
+                return 0.0;
+            }
+        }
+
+        public double getDefendersWinChance(int attackers, int defenders) {
+            try {
+                if (results[attackers][defenders] == null) return 1.0;
+                return results[attackers][defenders].defendersWinChance;
+            } catch (Exception e) {
+                return 1.0;
+            }
+        }
+
+        public double getExpectedAttackersDeaths(int attackers, int defenders) {
+            try {
+                if (results[attackers][defenders] == null) return attackers;
+                return results[attackers][defenders].expectedAttackersDeaths;
+            } catch (Exception e) {
+                return attackers;
+            }
+        }
+
+        public Double getExpectedDefendersDeaths(int attackers, int defenders) {
+            try {
+                if (results[attackers][defenders] == null) return null;
+                return results[attackers][defenders].expectedDefendersDeaths;
+            } catch (Exception e) {
+                return null;
+            }
+        }
+
 		public void saveToFile(File file) {
 			ObjectOutputStream stream = null;
 			try {
