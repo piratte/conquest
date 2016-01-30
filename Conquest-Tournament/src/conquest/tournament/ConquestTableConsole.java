@@ -71,7 +71,7 @@ public class ConquestTableConsole {
 	    	.setDefault("./results/results-table.csv")
 	    	.setShortFlag(ARG_TABLE_FILE_SHORT)
 	    	.setLongFlag(ARG_TABLE_FILE_LONG);    
-	    opt322.setHelp("Table file to process.");
+	    opt322.setHelp("Table file to process (single file will be read) or Directory containing table files (all the .csv files found within the directory will be read).");
 	    
 	    jsap.registerParameter(opt322);
 	    
@@ -120,15 +120,12 @@ public class ConquestTableConsole {
 		System.out.println("Sanity checks...");
 		
 		tableFile = new File(tableFileName);
-		System.out.println("-- table file: " + tableFileName + " --> " + tableFile.getAbsolutePath());
+		System.out.println("-- table file/dir: " + tableFileName + " --> " + tableFile.getAbsolutePath());
 	
 		if (!tableFile.exists()) {
 			fail("Table file does not exists. Parsed as: " + tableFileName + " --> " + tableFile.getAbsolutePath());
 		}
-		if (!tableFile.isFile()) {
-			fail("Table file is not a file. Parsed as: " + tableFileName + " --> " + tableFile.getAbsolutePath());
-		}
-		System.out.println("---- table file exists, ok");
+		System.out.println("---- table file/dir exists, ok");
 		
 		summaryFile = new File(summaryFileName);
 		System.out.println("-- summary file: " + summaryFileName + " --> " + summaryFile.getAbsolutePath());
@@ -152,8 +149,8 @@ public class ConquestTableConsole {
 	// ==============
 	public static String[] getTestArgs() {
 		return new String[] {
-				  "-t", "./results/results-table.csv"         // input table CSV
-				, "-s", "./results/results-table-summary.csv" // output summary CSV				
+				  "-t", "./results/fights"             // input directory containing CSVs
+				, "-s", "./results/fights-summary.csv" // output summary CSV				
 		};
 	}
 	

@@ -114,12 +114,42 @@ public class ConquestTable {
 	}
 	
 	public void run() {
-		TableSummary summary = ConquestTable.readTable(tableFileIn);
-		ConquestTable.writeSummary(summary, summaryFileOut);
+		if (tableFileIn.isFile()) {
+			// PROCESS SINGLE FILE
+			System.out.println("Reading: " + tableFileIn.getAbsolutePath());			
+			TableSummary summary = ConquestTable.readTable(tableFileIn);
+			System.out.println("Writing: " + summaryFileOut.getAbsolutePath());
+			ConquestTable.writeSummary(summary, summaryFileOut);
+		} else 
+		if (tableFileIn.isDirectory()) {
+			// PROCESS ALL .csv WITHIN THE DIR
+			TableSummary summary = new TableSummary();
+			
+			for (File file : tableFileIn.listFiles()) {
+				if (file.getName().endsWith(".csv")) {
+					System.out.println("Reading: " + file.getAbsolutePath());								
+					ConquestTable.readTable(file, summary);
+				}
+			}
+			System.out.println("Writing: " + summaryFileOut.getAbsolutePath());
+			ConquestTable.writeSummary(summary, summaryFileOut);
+		} else {
+			throw new RuntimeException("Table file is invalid, neither FILE nor DIRECTORY: " + tableFileIn.getAbsolutePath());
+		}
 	}
 	
 	public static TableSummary readTable(File tableFileIn) {
-		TableSummary result = new TableSummary();
+		return readTable(tableFileIn, null);
+	}
+	
+	/**
+	 * Read another file with results appending data into 'result'.
+	 * @param tableFileIn
+	 * @param result if null will be created
+	 * @return
+	 */
+	public static TableSummary readTable(File tableFileIn, TableSummary result) {
+		if (result == null) result = new TableSummary();
 		
 		try {
 			CSV csv = new CSV(tableFileIn, ";", true);

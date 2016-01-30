@@ -186,7 +186,7 @@ public class ConquestFightConsole {
 	    FlaggedOption opt32 = new FlaggedOption(ARG_RESULT_DIR_LONG)
 	    	.setStringParser(JSAP.STRING_PARSER)
 	    	.setRequired(false)
-	    	.setDefault("./results")
+	    	.setDefault("./results/fights")
 	    	.setShortFlag(ARG_RESULT_DIR_SHORT)
 	    	.setLongFlag(ARG_RESULT_DIR_LONG);    
 	    opt32.setHelp("Directory where to output results, will be created if not exist.");
@@ -206,7 +206,7 @@ public class ConquestFightConsole {
 	    FlaggedOption opt322 = new FlaggedOption(ARG_TABLE_FILE_LONG)
 	    	.setStringParser(JSAP.STRING_PARSER)
 	    	.setRequired(false)
-	    	.setDefault("./results/results-table.csv")
+	    	.setDefault("./results/all-results.csv")
 	    	.setShortFlag(ARG_TABLE_FILE_SHORT)
 	    	.setLongFlag(ARG_TABLE_FILE_LONG);    
 	    opt322.setHelp("File where to collect results of all fights (we incrementally append results here).");
@@ -361,9 +361,9 @@ public class ConquestFightConsole {
 				, "-b", "dir;process:../Conquest-Bots;java -cp ./bin;../Conquest/bin conquest.bot.external.JavaBot conquest.bot.custom.AggressiveBot" // bot1-init
 				, "-c", "BotStarter"                                 // bot2-id
 				, "-d", "internal:conquest.bot.BotStarter"           // bot2-init
-				, "-u", "./results"                   // result-dir
+				, "-u", "./results/fights"              // result-dir
 				, "-y", "./results/replays"           // replay-dir
-				, "-t", "./results/results-table.csv" // table-file
+				, "-t", "./results/all-results.csv"   // single results file
 		};
 		
 		// game-config:
