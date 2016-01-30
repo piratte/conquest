@@ -22,11 +22,12 @@ FEATURES
 
 6) Conquest-Tournament project can be used to automate matches between bots using command line tools (see ConquestFightConsole and ConquestTableConsole classes)
 
-7) possible to execute "process" player from within concrete directory, use "dir;process" as bot init command to specify the directory from which you would like the bot process to be executed (very convenient for automation)
+7) possibilityto execute "process" player from within concrete directory, use "dir;process" as bot init command to specify the directory from which you would like the bot process to be executed
 
 -- not a big feature but very handy for automation
 
--- if you deal with Java bots, you might want to run your Java bots as "external bots" using "dir;process" indirectly running JavaBot class
+-- if you deal with Java bots, you might want to run your Java bots as "external bots" using "dir;process" indirectly running JavaBot class instead of original bot class (i.e. make JavaBot to instantiate and run your tournament bot);
+this will spare you the problems with "invalid" main of the bot you want to execute (as long as it has parameterless constructor)
 
 EXTRA GUI (KEYBOARD) CONTROLS
 
