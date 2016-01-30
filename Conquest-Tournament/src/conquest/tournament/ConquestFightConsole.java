@@ -46,6 +46,14 @@ public class ConquestFightConsole {
 	
 	private static final String ARG_BOT2_INIT_LONG = "bot2-init";
 	
+	private static final char ARG_BOT_ID_BATCH_SHORT = 'e';
+	
+	private static final String ARG_BOT_ID_BATCH_LONG = "bot-id-batch";
+	
+	private static final char ARG_BOTS_BATCH_PROPERTIES_SHORT = 'f';
+	
+	private static final String ARG_BOTS_BATCH_PROPERTIES_LONG = "bots-property-file-batch";
+	
 	private static final char ARG_RESULT_DIR_SHORT = 'u';
 	
 	private static final String ARG_RESULT_DIR_LONG = "result-dir";
@@ -75,6 +83,12 @@ public class ConquestFightConsole {
 	private static String bot2Id;
 	
 	private static String bot2Init;
+	
+	private static String botIdBatch;
+	
+	private static String botsBatchPropertyFileName;
+	
+	private static File botsBatchPropertyFile;
 		
 	private static String resultDir;
 	
@@ -87,6 +101,8 @@ public class ConquestFightConsole {
 	private static String tableFileName;
 	
 	private static File tableFile;
+	
+	private static boolean batchFight;
 
 	private static boolean headerOutput = false;
 
@@ -129,7 +145,7 @@ public class ConquestFightConsole {
         
         FlaggedOption opt1 = new FlaggedOption(ARG_BOT1_ID_LONG)
 	    	.setStringParser(JSAP.STRING_PARSER)
-	    	.setRequired(true) 
+	    	.setRequired(false) 
 	    	.setShortFlag(ARG_BOT1_ID_SHORT)
 	    	.setLongFlag(ARG_BOT1_ID_LONG);    
 	    opt1.setHelp("Bot 1 ID.");
@@ -138,7 +154,7 @@ public class ConquestFightConsole {
 	    
 	    FlaggedOption opt11 = new FlaggedOption(ARG_BOT1_INIT_LONG)
 	    	.setStringParser(JSAP.STRING_PARSER)
-	    	.setRequired(true) 
+	    	.setRequired(false) 
 	    	.setShortFlag(ARG_BOT1_INIT_SHORT)
 	    	.setLongFlag(ARG_BOT1_INIT_LONG);    
 	    opt11.setHelp("Bot 1 INIT string, e.g.: internal:conquest.bot.BotStarter");
@@ -147,7 +163,7 @@ public class ConquestFightConsole {
 	    
 	    FlaggedOption opt2 = new FlaggedOption(ARG_BOT2_ID_LONG)
 	    	.setStringParser(JSAP.STRING_PARSER)
-	    	.setRequired(true) 
+	    	.setRequired(false) 
 	    	.setShortFlag(ARG_BOT2_ID_SHORT)
 	    	.setLongFlag(ARG_BOT2_ID_LONG);    
 	    opt2.setHelp("Bot 2 ID.");
@@ -156,12 +172,30 @@ public class ConquestFightConsole {
 	    
 	    FlaggedOption opt22 = new FlaggedOption(ARG_BOT2_INIT_LONG)
 	    	.setStringParser(JSAP.STRING_PARSER)
-	    	.setRequired(true) 
+	    	.setRequired(false) 
 	    	.setShortFlag(ARG_BOT2_INIT_SHORT)
 	    	.setLongFlag(ARG_BOT2_INIT_LONG);    
 	    opt22.setHelp("Bot 2 INIT string, e.g.: process:java -cp bin conquest.bot.BotStarter");
 	    
 	    jsap.registerParameter(opt22);
+	    
+	    FlaggedOption opt23 = new FlaggedOption(ARG_BOT_ID_BATCH_LONG)
+	    	.setStringParser(JSAP.STRING_PARSER)
+	    	.setRequired(false) 
+	    	.setShortFlag(ARG_BOT_ID_BATCH_SHORT)
+	    	.setLongFlag(ARG_BOT_ID_BATCH_LONG);    
+	    opt23.setHelp("Bot ID to use for BATCH fights agains other bots specified within batch property file.");
+	    
+	    jsap.registerParameter(opt23);
+	    
+	    FlaggedOption opt24 = new FlaggedOption(ARG_BOTS_BATCH_PROPERTIES_LONG)
+	    	.setStringParser(JSAP.STRING_PARSER)
+	    	.setRequired(false) 
+	    	.setShortFlag(ARG_BOTS_BATCH_PROPERTIES_SHORT)
+	    	.setLongFlag(ARG_BOTS_BATCH_PROPERTIES_LONG);    
+	    opt24.setHelp("Property file with botId=botInit entries to use for batch fights.");
+	    
+	    jsap.registerParameter(opt24);
 	    
 	    
 	    FlaggedOption opt3 = new FlaggedOption(ARG_REVERSE_GAMES_LONG)
@@ -273,13 +307,17 @@ public class ConquestFightConsole {
 		
 		tableFileName = config.getString(ARG_TABLE_FILE_LONG);
 		
-		bot1Id = config.getString(ARG_BOT1_ID_LONG);
+		bot1Id = config.getString(ARG_BOT1_ID_LONG, null);
 		
-		bot1Init = config.getString(ARG_BOT1_INIT_LONG);
+		bot1Init = config.getString(ARG_BOT1_INIT_LONG, null);
 		
-		bot2Id = config.getString(ARG_BOT2_ID_LONG);
+		bot2Id = config.getString(ARG_BOT2_ID_LONG, null);
 		
-		bot2Init = config.getString(ARG_BOT2_INIT_LONG);
+		bot2Init = config.getString(ARG_BOT2_INIT_LONG, null);
+		
+		botIdBatch = config.getString(ARG_BOT_ID_BATCH_LONG, null);
+		
+		botsBatchPropertyFileName = config.getString(ARG_BOTS_BATCH_PROPERTIES_LONG, null);
 	}
 	
 	private static void sanityChecks() {
@@ -327,13 +365,49 @@ public class ConquestFightConsole {
 			fail("Table file exists and is not a file. Parsed as: " + tableFileName + " --> " + tableFile.getAbsolutePath());
 		}
 		
-		System.out.println("-- bot1: " + bot1Id + " / " + bot1Init);
-		System.out.println("-- bot2: " + bot2Id + " / " + bot2Init);
+		if (bot1Id != null && bot2Id != null && bot1Init != null && bot2Init != null) {
+			batchFight = false;
+			System.out.println("-- Bot 1 & 2 ids / inits specified, will execute 1v1 fights");
+			System.out.println("---- bot1: " + bot1Id + " / " + bot1Init);
+			System.out.println("---- bot2: " + bot2Id + " / " + bot2Init);
+		} else 
+		if (botIdBatch != null && botsBatchPropertyFileName != null) {
+			batchFight = true;				
+			System.out.println("-- Bot batch ID + Bots batch property file name specified, will execute batch fights");
+			
+			System.out.println("---- Bot ID for batch fights: " + botIdBatch);
+			
+			botsBatchPropertyFile = new File(botsBatchPropertyFileName);
+			System.out.println("---- Bots property file for batch fights: " + botsBatchPropertyFileName + " --> " + botsBatchPropertyFile.getAbsolutePath());
+			
+			if (!botsBatchPropertyFile.exists()) {
+				fail("------ File does not exist: " + botsBatchPropertyFileName + " --> " + botsBatchPropertyFile.getAbsolutePath());
+			}
+			if (!botsBatchPropertyFile.isFile()) {
+				fail("------ File is not a file: " + botsBatchPropertyFileName + " --> " + botsBatchPropertyFile.getAbsolutePath());
+			}
+			System.out.println("------ Bots property file exists, ok");
+			
+		} else {
+			fail("Invalid specification, you either have to specify Bot 1 Id+Init and Bot 2 Id+Init for 1v1 fights, or Bot Id for batch fights together with property files with botId=botInit pairs.");
+		}
 		
 	    System.out.println("Sanity checks OK!");
 	}
 	
 	private static void fight() {
+		
+		if (batchFight) {
+			batchFight();
+		} else {
+			fight1v1();
+		}
+	}
+	
+	private static void fight1v1() {
+	
+		System.out.println("EXECUTING 1v1 FIGHT!");
+		
 		ConquestFightConfig config = new ConquestFightConfig();
 		
 		config.config = Config.fromString(roundConfig);
@@ -347,11 +421,26 @@ public class ConquestFightConsole {
 			fight.fight(bot2Id, bot2Init, bot1Id, bot1Init);
 		}
 	}
+	
+	private static void batchFight() {
+		System.out.println("EXECUTING BATCH FIGHTS!");
+		
+		ConquestFightConfig config = new ConquestFightConfig();
+		
+		config.config = Config.fromString(roundConfig);
+		config.seed = seed;
+		config.games = gamesCount;
+		
+		ConquestFightBatch batch = new ConquestFightBatch(botsBatchPropertyFile, config);
+		
+		batch.fight(botIdBatch, reverseGames, tableFile, resultDirFile, replayDirFile);
+	}
 		
 	// ==============
 	// TEST ARGUMENTS
 	// ==============
-	public static String[] getTestArgs() {
+	
+	public static String[] getTestArgs_1v1() {
 		return new String[] {
 				  "-s", "20"     // seed
 				, "-o", "GAME;PLR1;PLR2;x;x;false;false;-1;true;5000;5;100;CONTINUAL_1_1_A60_D70"   // game-config
@@ -381,13 +470,28 @@ public class ConquestFightConsole {
 		//		result.startingArmies = Integer.parseInt(parts[3]);
 		//		result.maxGameRounds = Integer.parseInt(parts[4]);
 		//		result.fight = FightMode.valueOf(parts[5]);                      // see FightMode for strings
+	}
+	
+	public static String[] getTestArgs_Batch() {
+		return new String[] {
+				  "-s", "20"     // seed
+				, "-o", "GAME;PLR1;PLR2;x;x;false;false;-1;true;5000;5;100;CONTINUAL_1_1_A60_D70"   // game-config
+				, "-g", "3"      // games-count
+				, "-r", "true"   // reverse-games
+				, "-e", "AggressiveBot"                              // bot-id that will perform fights agains all other bots within batch property file
+				, "-f", "batch-fight.properties" 				     // batch property file
+				, "-u", "./results/fights"            // result-dir
+				, "-y", "./results/replays"           // replay-dir
+				, "-t", "./results/all-results.csv"   // single results file
+		};
 	}	
 	
 	public static void main(String[] args) throws JSAPException {
 		// -----------
 		// FOR TESTING
 		// -----------
-		//args = getTestArgs();		
+		//args = getTestArgs_1v1();		
+		//args = getTestArgs_Batch();
 		
 		// --------------
 		// IMPLEMENTATION
