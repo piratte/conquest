@@ -1,4 +1,4 @@
-Warlight AI Challenge engine (http://theaigames.com/competitions/warlight-ai-challenge) + interactive visual map + replays + internal bots (can be hijacked) + human players.
+Warlight AI Challenge engine (http://theaigames.com/competitions/warlight-ai-challenge) + interactive visual map + replays + internal bots (can be hijacked) + human players + automation.
 
 Forked from: https://github.com/skylogic004/conquest-engine-gui
 
@@ -19,6 +19,14 @@ FEATURES
 -- beware, some buttons can be "right clicked" to "reverse the effect" (e.g. when placing armies left click -> plus, right click -> minus or when moving armies left click -> OK, right click -> cancel)
 
 5) better GameState abstraction than plain BotState provided, use GameBot as a base class for your bots
+
+6) Conquest-Tournament project can be used to automate matches between bots using command line tools (see ConquestFightConsole and ConquestTableConsole classes)
+
+7) possible to execute "process" player from within concrete directory, use "dir;process" as bot init command to specify the directory from which you would like the bot process to be executed (very convenient for automation)
+
+-- not a big feature but very handy for automation
+
+-- if you deal with Java bots, you might want to run your Java bots as "external bots" using "dir;process" indirectly running JavaBot class
 
 EXTRA GUI (KEYBOARD) CONTROLS
 

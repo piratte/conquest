@@ -3,3 +3,13 @@ classes/
 .metadata
 /Conquest/bin
 /Conquest-Bots/bin
+replay.log
+/Conquest-Tournament/results
+/Conquest-Bots/FightSimulation-Attackers-A100-D100.obj
+/Conquest-Bots/FightSimulation-Attackers-A50-D50.obj
+/Conquest-Bots/FightSimulation-Attackers-A500-D500.obj
+/Conquest-Bots/FightSimulation-Defenders-A100-D100.obj
+/Conquest-Bots/FightSimulation-Defenders-A50-D50.obj
+/Conquest-Bots/FightSimulation-Defenders-A500-D500.obj
+/Conquest-Bots/FightSimulationExact-A50-D50.obj
+/Conquest-Tournament/bin
