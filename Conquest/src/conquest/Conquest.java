@@ -76,6 +76,7 @@ public class Conquest {
 		System.out.println("        -- internal:fqcn ~ to start bot directly on Java classpath");
 		System.out.println("        -- process:command ~ to execute the bot from command line");
 		System.out.println("        -- dir;process:dir;command ~ to execute the bot from command line from specfici directory");
+		System.out.println("        -- human ~ human player");
 		System.out.println();
 		System.out.println("To replay the game (1 argument):");
 		System.out.println("java ... conquest.Conquest <replay file:string>");
