@@ -53,6 +53,7 @@ public class BotParser extends Thread {
 	
 	public BotParser(Bot bot, InputStream input, PrintStream output)
 	{
+		super("BotParser[" + bot.getClass().getName() + "]");
 		this.input = new BotStreamReader(input);
 		this.output = output;
 		
@@ -60,17 +61,17 @@ public class BotParser extends Thread {
 		this.currentState = new BotState();
 	}
 	
-	public static BotParser runInternal(String playerName, String botFQCN, InputStream input, PrintStream output) {
+	public static Bot constructBot(String botFQCN) {
 		Class botClass;
 		try {
 			botClass = Class.forName(botFQCN);
 		} catch (ClassNotFoundException e) {
 			throw new RuntimeException("Failed to locate bot class: " + botFQCN, e);
 		}
-		return runInternal(playerName, botClass, input, output);
+		return constructBot(botClass);
 	}
 	
-	public static BotParser runInternal(String playerName, Class botClass, InputStream input, PrintStream output) {
+	public static Bot constructBot(Class botClass) {		
 		Object botObj;
 		try {
 			botObj = botClass.getConstructor().newInstance();
@@ -81,11 +82,22 @@ public class BotParser extends Thread {
 			throw new RuntimeException("Constructed bot does not implement " + Bot.class.getName() + " interface, bot class instantiated: " + botClass.getName());
 		}
 		Bot bot = (Bot) botObj;
-		return runInternal(playerName, bot, input, output);
+		return bot;
 	}
 	
-	public static BotParser runInternal(String playerName, Bot bot, InputStream input, PrintStream output) {
+	public static BotParser runInternal(String playerName, String botFQCN, InputStream input, PrintStream output, File logFile) {
+		Bot bot = constructBot(botFQCN);
+		return runInternal(playerName, bot, input, output, logFile);
+	}
+	
+	public static BotParser runInternal(String playerName, Class botClass, InputStream input, PrintStream output, File logFile) {
+		Bot bot = constructBot(botClass);
+		return runInternal(playerName, bot, input, output, logFile);
+	}
+	
+	public static BotParser runInternal(String playerName, Bot bot, InputStream input, PrintStream output, File logFile) {
 		BotParser parser = new BotParser(bot, input, output);
+		if (logFile != null) parser.setLogFile(logFile);
 		parser.start();
 		return parser;
 	}
@@ -126,6 +138,7 @@ public class BotParser extends Thread {
 			}
 			line = line.trim();
 			if(line.length() == 0) { continue; }
+			log("IN : " + line);
 			String[] parts = line.split(" ");
 			if(parts[0].equals("pick_starting_regions")) {
 				//pick which regions you want to start with

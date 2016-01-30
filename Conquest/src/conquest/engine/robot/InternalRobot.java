@@ -69,7 +69,7 @@ public class InternalRobot implements Robot {
 		botInput = new InputOutputStream();
 		botOutput = new InputOutputStream();
 		
-		bot = BotParser.runInternal(playerName, botFQCN, botInput.getInputStream(), new PrintStream(botOutput.getOutputStream()));
+		bot = BotParser.runInternal(playerName, botFQCN, botInput.getInputStream(), new PrintStream(botOutput.getOutputStream()), null);
 		System.out.println(playerName + " -> " + botFQCN);
 		
 		robot = new IORobot(playerName, botInput.getOutputStream(), true, botOutput.getInputStream(), null);

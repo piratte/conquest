@@ -164,7 +164,7 @@ public class RunGame
 		}
 		
 		public String getHumanString() {
-			return "Winner: " + getWinnerName() + " [Round: " + round + "]\nPlayer1: " + player1Regions + " regions / " + player1Armies + " armies\nPlayer2: " + player2Regions + " regions / " + player2Armies + " armies";
+			return "Winner: " + getWinnerName() + "[" + getWinnerId() + "] in round " + round + "\nPlayer1: " + player1Regions + " regions / " + player1Armies + " armies\nPlayer2: " + player2Regions + " regions / " + player2Armies + " armies";
 		}
 		
 		public String getCSVHeader() {
@@ -308,8 +308,11 @@ public class RunGame
 	private Robot setupRobot(String playerName, String botInit) throws IOException {
 		if (botInit.startsWith("dir;process:")) {
 			String cmd = botInit.substring(12);
-			String parts[] = cmd.split(";");
-			return new ProcessRobot(playerName, parts[0], parts[1]);
+			int semicolon = cmd.indexOf(";");
+			if (semicolon < 0) throw new RuntimeException("Invalid bot torrent (does not contain ';' separating directory and commmend): " + botInit);
+			String dir = cmd.substring(0, semicolon);
+			String process = cmd.substring(semicolon+1);			
+			return new ProcessRobot(playerName, dir, process);
 		}
 		if (botInit.startsWith("process:")) {
 			String cmd = botInit.substring(8);
