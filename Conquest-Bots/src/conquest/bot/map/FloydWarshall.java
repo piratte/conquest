@@ -130,10 +130,10 @@ public class FloydWarshall  {
 
 	public FloydWarshall() {
 		long start = System.currentTimeMillis();				
-		System.out.println("FloydWarshall initializing...");
+		System.err.println("FloydWarshall initializing...");
 		compute();
 		cacheAllPaths();
-		System.out.println("FINISHED: " + (System.currentTimeMillis() - start) + "ms");
+		System.err.println("FINISHED: " + (System.currentTimeMillis() - start) + "ms");
 	}
 	
 	/**

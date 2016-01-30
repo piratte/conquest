@@ -9,6 +9,7 @@ import java.util.List;
 import conquest.bot.BotParser;
 import conquest.bot.BotStarter;
 import conquest.bot.BotState;
+import conquest.bot.external.JavaBot;
 import conquest.bot.fight.FightSimulation.FightAttackersResults;
 import conquest.bot.fight.FightSimulation.FightDefendersResults;
 import conquest.bot.map.Player;
@@ -38,9 +39,10 @@ public class AggressiveBot extends GameBot
 	FightAttackersResults aRes;
 	FightDefendersResults dRes;
 	
-	public AggressiveBot() {
+	public AggressiveBot() {		
 		aRes = FightAttackersResults.loadFromFile(new File("FightSimulation-Attackers-A200-D200.obj"));
 		dRes = FightDefendersResults.loadFromFile(new File("FightSimulation-Defenders-A200-D200.obj"));
+		System.err.println("---==[ AGGRESSIVE BOT INITIALIZED ]==---");
 	}
 	
 	@Override
@@ -219,7 +221,7 @@ public class AggressiveBot extends GameBot
 
 			@Override
 			public BFSVisitResult<BFSNode> visit(Region region, int level, BFSNode parent, BFSNode thisNode) {
-				//System.out.println((parent == null ? "START" : parent.level + ":" + parent.region) + " --> " + level + ":" + region);
+				//System.err.println((parent == null ? "START" : parent.level + ":" + parent.region) + " --> " + level + ":" + region);
 				if (!hasOnlyMyNeighbours(state.region(region))) {
 					moveToFrontRegion = region;
 					return new BFSVisitResult<BFSNode>(BFSVisitResultType.TERMINATE, thisNode == null ? new BFSNode() : thisNode);
@@ -237,10 +239,10 @@ public class AggressiveBot extends GameBot
 			boolean first = true;
 			for (Region region : path) {
 				if (first) first = false;
-				else System.out.print(" --> ");
-				System.out.print(region);
+				else System.err.print(" --> ");
+				System.err.print(region);
 			}
-			System.out.println();
+			System.err.println();
 			
 			return transfer(from, state.region(moveTo));
 		}
@@ -253,10 +255,12 @@ public class AggressiveBot extends GameBot
 		Config config = new Config();
 		
 		config.bot1Init = "internal:conquest.bot.custom.AggressiveBot";
+		//config.bot1Init = "dir;process:../Conquest-Bots;java -cp ./bin;../Conquest/bin conquest.bot.external.JavaBot conquest.bot.custom.AggressiveBot ./AggressiveBot.log";
 		config.bot2Init = "internal:conquest.bot.BotStarter";
 		//config.bot2Init = "human";
 		
 		config.engine.botCommandTimeoutMillis = 24*60*60*1000;
+		//config.engine.botCommandTimeoutMillis = 5000;
 		
 		config.engine.maxGameRounds = 100;
 		
@@ -274,13 +278,15 @@ public class AggressiveBot extends GameBot
 	}
 	
 	public static void runExternal() {
-		BotParser parser = new BotParser(new BotStarter());
-		//parser.setLogFile(new File("./BotStarter.log"));
+		BotParser parser = new BotParser(new AggressiveBot());
+		parser.setLogFile(new File("./AggressiveBot.log"));
 		parser.run();
 	}
 
 	public static void main(String[] args)
 	{
+		//JavaBot.exec(new String[]{"conquest.bot.custom.AggressiveBot", "./AggressiveBot.log"});
+		
 		runInternal();
 	}
 

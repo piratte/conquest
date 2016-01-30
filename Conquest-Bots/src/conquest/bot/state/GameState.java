@@ -10,6 +10,7 @@ import conquest.bot.map.Player;
 import conquest.game.RegionData;
 import conquest.game.world.Continent;
 import conquest.game.world.Region;
+import conquest.utils.HashMapInt;
 
 public class GameState {
 	

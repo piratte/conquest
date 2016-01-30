@@ -1,4 +1,4 @@
-package conquest.bot.custom;
+package conquest.bot.fight;
 
 public class Fight {
 	
