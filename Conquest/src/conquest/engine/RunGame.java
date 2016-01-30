@@ -48,7 +48,7 @@ import conquest.view.GUI;
 public class RunGame
 {
 	
-	public static class Config {
+	public static class Config implements Cloneable {
 		
 		public String gameId = "GAME";
 		
@@ -73,7 +73,26 @@ public class RunGame
 		public EngineConfig engine = new EngineConfig();
 		
 		public String asString() {
-			return gameId + ";" + playerName1 + ";" + playerName2 + ";" + bot1Id + ";" + bot2Id + ";" + visualize + ";" + engine.asString();
+			return gameId + ";" + playerName1 + ";" + playerName2 + ";" + bot1Id + ";" + bot2Id + ";" + visualize + ";" + forceHumanVisualization + ";" + engine.asString();
+		}
+		
+		@Override
+		public Config clone() {
+			Config result = fromString(asString());
+			
+			result.replayLog = replayLog;
+			result.bot1Init = bot1Init;
+			result.bot2Init = bot2Init;
+			
+			return result;
+		}
+		
+		public String getCSVHeader() {
+			return "ID;Bot1;Bot2;" + engine.getCSVHeader();
+		}
+		
+		public String getCSV() {
+			return gameId + ";" + bot1Id + ";" + bot2Id + ";" + engine.getCSV();
 		}
 		
 		public static Config fromString(String line) {
@@ -88,9 +107,10 @@ public class RunGame
 			result.bot1Id = parts[3];
 			result.bot2Id = parts[4];
 			result.visualize = Boolean.parseBoolean(parts[5]);
+			result.forceHumanVisualization = Boolean.parseBoolean(parts[6]);
 			
 			int engineConfigStart = 0;
-			for (int i = 0; i < 6; ++i) {
+			for (int i = 0; i < 7; ++i) {
 				engineConfigStart = line.indexOf(";", engineConfigStart);
 				++engineConfigStart;
 			}
@@ -112,33 +132,47 @@ public class RunGame
 		public int player2Regions;
 		public int player2Armies;
 		
-		/**
-		 * 0 -> none
-		 * 1 -> player 1
-		 * 2 -> player 2
-		 */
-		public int winner = 0;
+		public Team winner = null;
 		
 		/**
 		 * Number of the round the game ended.
 		 */
 		public int round;
 
-		public String getWinner() {
+		public String getWinnerName() {
+			if (winner == null) return "NONE";
 			switch (winner) {
-			case 0: return "NONE";
-			case 1: return config == null ? "Player1" : config.playerName1;
-			case 2: return config == null ? "Player2" : config.playerName2;
+			case NEUTRAL: return "NONE";
+			case PLAYER_1: return config == null ? "Player1" : config.playerName1;
+			case PLAYER_2: return config == null ? "Player2" : config.playerName2;
+			}
+			return null;
+		}
+		
+		public String getWinnerId() {
+			if (winner == null) return "NONE";
+			switch (winner) {
+			case NEUTRAL: return "NONE";
+			case PLAYER_1: return config == null ? "Bot1" : config.bot1Id;
+			case PLAYER_2: return config == null ? "Bot2" : config.bot2Id;
 			}
 			return null;
 		}
 
 		public String asString() {
-			return getWinner() + ";" + player1Regions + ";" + player1Armies + ";" + player2Regions + ";" + player2Armies + ";" + round;
+			return getWinnerName() + ";" + player1Regions + ";" + player1Armies + ";" + player2Regions + ";" + player2Armies + ";" + round;
 		}
 		
 		public String getHumanString() {
-			return "Winner: " + getWinner() + " [Round: " + round + "]\nPlayer1: " + player1Regions + " regions / " + player1Armies + " armies\nPlayer2: " + player2Regions + " regions / " + player2Armies + " armies";
+			return "Winner: " + getWinnerName() + " [Round: " + round + "]\nPlayer1: " + player1Regions + " regions / " + player1Armies + " armies\nPlayer2: " + player2Regions + " regions / " + player2Armies + " armies";
+		}
+		
+		public String getCSVHeader() {
+			return "winnerId;winner;winnerName;player1Regions;player1Armies;player2Regions;player2Armies;round;" + config.getCSVHeader();
+		}
+		
+		public String getCSV() {
+			return getWinnerId() + ";" + (winner == null || winner == Team.NEUTRAL ? "NONE" : winner) + ";" + getWinnerName() + ";" + player1Regions + ";" + player1Armies + ";" + player2Regions + ";" + player2Armies + ";" + round + ";" + config.getCSV();
 		}
 		
 	}
@@ -272,6 +306,11 @@ public class RunGame
 	}
 
 	private Robot setupRobot(String playerName, String botInit) throws IOException {
+		if (botInit.startsWith("dir;process:")) {
+			String cmd = botInit.substring(12);
+			String parts[] = cmd.split(";");
+			return new ProcessRobot(playerName, parts[0], parts[1]);
+		}
 		if (botInit.startsWith("process:")) {
 			String cmd = botInit.substring(8);
 			return new ProcessRobot(playerName, cmd);
@@ -587,13 +626,13 @@ public class RunGame
 		
 		if (engine.winningPlayer() != null) {
 			if (config.playerName1.equals(engine.winningPlayer().getName())) {
-				result.winner = 1;
+				result.winner = Team.PLAYER_1;
 			} else
 			if (config.playerName2.equals(engine.winningPlayer().getName())) {
-				result.winner = 2;
+				result.winner = Team.PLAYER_2;
 			}
 		} else {
-			result.winner = 0;
+			result.winner = null;
 		}
 		
 		result.round = engine.getRoundNr()-1;
@@ -611,6 +650,7 @@ public class RunGame
 		//config.bot1Init = "human";
 		config.bot2Init = "internal:conquest.bot.BotStarter";
 		//config.bot2Init = "process:java -cp bin conquest.bot.BotStarter";
+		//config.bot2Init = "dir;process:c:/my_bot/;java -cp bin conquest.bot.BotStarter";
 		
 		config.engine.botCommandTimeoutMillis = 24*60*60*1000;
 		

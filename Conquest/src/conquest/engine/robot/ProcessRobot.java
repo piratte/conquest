@@ -17,15 +17,12 @@
 
 package conquest.engine.robot;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import conquest.engine.Robot;
-import conquest.engine.Robot.RobotConfig;
-import conquest.engine.replay.GameLog;
 import conquest.game.RegionData;
-import conquest.game.move.Move;
-import conquest.view.GUI;
 
 
 public class ProcessRobot implements Robot
@@ -40,7 +37,12 @@ public class ProcessRobot implements Robot
 	
 	public ProcessRobot(String playerName, String command) throws IOException
 	{
-		child = Runtime.getRuntime().exec(command);
+		this(playerName, "./", command);
+	}
+	
+	public ProcessRobot(String playerName, String dir, String command) throws IOException
+	{		
+		child = Runtime.getRuntime().exec(command, null, new File(dir));
 		System.out.println(playerName + " -> " + command);
 		robot = new IORobot(playerName, child.getOutputStream(), false, child.getInputStream(), child.getErrorStream());
 	}

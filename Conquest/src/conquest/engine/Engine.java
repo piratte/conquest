@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.Timer;
 
 import conquest.engine.Engine.EngineConfig;
 import conquest.engine.RunGame.Config;
@@ -57,7 +58,7 @@ public class Engine {
 		
 	}
 	
-	public static class EngineConfig {
+	public static class EngineConfig implements Cloneable {
 		
 		/**
 		 * Non-negative seed => use concrete seed.
@@ -75,7 +76,7 @@ public class Engine {
 		public FightMode fight = FightMode.ORIGINAL_A60_D70;
 		
 		public String asString() {
-			return seed + ";" + fullyObservableGame + ";" + botCommandTimeoutMillis + ";" + startingArmies + ";" + maxGameRounds;
+			return seed + ";" + fullyObservableGame + ";" + botCommandTimeoutMillis + ";" + startingArmies + ";" + maxGameRounds + ";" + fight;
 		}
 		
 		public static EngineConfig fromString(String line) {
@@ -88,8 +89,17 @@ public class Engine {
 			result.botCommandTimeoutMillis = Long.parseLong(parts[2]);
 			result.startingArmies = Integer.parseInt(parts[3]);
 			result.maxGameRounds = Integer.parseInt(parts[4]);
+			result.fight = FightMode.valueOf(parts[5]);
 
 			return result;
+		}
+
+		public String getCSVHeader() {
+			return "seed;fullyObservable;timeoutMillis;startingArmies;maxGameRounds;fightMode";			
+		}
+		
+		public String getCSV() {
+			return seed + ";" + fullyObservableGame + ";" + botCommandTimeoutMillis + ";" + startingArmies + ";" + maxGameRounds + ";" + fight;
 		}
 		
 	}

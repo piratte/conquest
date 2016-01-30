@@ -34,7 +34,7 @@ public class Conquest {
 		Config config = new Config();
 		
 		config.bot1Init = "process:java -cp bin conquest.bot.BotStarter";
-		config.bot2Init = "process:java -cp bin conquest.bot.BotStarter";
+		config.bot2Init = "dir;process:./bin;java conquest.bot.BotStarter";
 				
 		config.visualize = visualize;
 		
@@ -72,6 +72,10 @@ public class Conquest {
 		System.out.println();
 		System.out.println("To start the game (5 or 6 arguments):");
 		System.out.println("java ... conquest.Conquest <max rounds:int> <bot command timeout:long> <bot1:init string> <bot2:init string> <visualization:boolean> [ <replay file:string> ]");
+		System.out.println("    -- possible bot init strings:");
+		System.out.println("        -- internal:fqcn ~ to start bot directly on Java classpath");
+		System.out.println("        -- process:command ~ to execute the bot from command line");
+		System.out.println("        -- dir;process:dir;command ~ to execute the bot from command line from specfici directory");
 		System.out.println();
 		System.out.println("To replay the game (1 argument):");
 		System.out.println("java ... conquest.Conquest <replay file:string>");
@@ -134,8 +138,7 @@ public class Conquest {
 				e.printStackTrace();
 				error();
 			}
-		}
-		
+		}		
 		
 	}
 	
