@@ -23,7 +23,7 @@ FEATURES
 6) Conquest-Tournament project can be used to automate matches between bots using command line tools (see ConquestFightConsole and ConquestTableConsole classes); see Conquest-Competition for example how to quickly setup tournament
 batch files (be sure to stop by and read Conquest-Competition/readme.txt)
 
-7) possibilityto execute "process" player from within concrete directory, use "dir;process" as bot init command to specify the directory from which you would like the bot process to be executed
+7) possibility to execute "process" player from within concrete directory, use "dir;process" as bot init command to specify the directory from which you would like the bot process to be executed
 
 -- not a big feature but very handy for automation
 
