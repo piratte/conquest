@@ -478,8 +478,8 @@ public class ConquestFightConsole {
 				, "-o", "GAME;PLR1;PLR2;x;x;false;false;-1;true;5000;5;100;CONTINUAL_1_1_A60_D70"   // game-config
 				, "-g", "3"      // games-count
 				, "-r", "true"   // reverse-games
-				, "-e", "AggressiveBot"                              // bot-id that will perform fights agains all other bots within batch property file
-				, "-f", "batch-fight.properties" 				     // batch property file
+				, "-e", "AggressiveBot"               // bot-id that will perform fights agains all other bots within batch property file
+				, "-f", "batch-fight.properties" 	  // batch property file
 				, "-u", "./results/fights"            // result-dir
 				, "-y", "./results/replays"           // replay-dir
 				, "-t", "./results/all-results.csv"   // single results file

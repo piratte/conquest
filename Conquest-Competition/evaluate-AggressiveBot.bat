@@ -1,0 +1,1 @@
+call evaluate.bat AggressiveBot
