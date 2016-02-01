@@ -14,6 +14,8 @@ IMPORTANT: All bat files must be run from within Conquest-Competition directory,
 you must have the whole repository cloned. E.g., we rely on the fact that "../Conquest" relative
 path resolves correctly from within Conquest-Competition directory.
 
+5) summarize.bat => will produce a summary of results out of ./results/fights CSV files
+
 ==========
 HOW TO USE
 ==========
