@@ -20,7 +20,8 @@ FEATURES
 
 5) better GameState abstraction than plain BotState provided, use GameBot as a base class for your bots
 
-6) Conquest-Tournament project can be used to automate matches between bots using command line tools (see ConquestFightConsole and ConquestTableConsole classes)
+6) Conquest-Tournament project can be used to automate matches between bots using command line tools (see ConquestFightConsole and ConquestTableConsole classes); see Conquest-Competition for example how to quickly setup tournament
+batch files
 
 7) possibilityto execute "process" player from within concrete directory, use "dir;process" as bot init command to specify the directory from which you would like the bot process to be executed
 
