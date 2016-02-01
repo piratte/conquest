@@ -30,3 +30,15 @@ HOW TO USE
 4) call evaluate.bat <bot-id> to run your bot against all other bots within batch-fight.properties
 
 In case you have troubles, you may contact me directly at: jakub.gemrot@gmail.com
+
+============
+DESIGN NOTES
+============
+
+1) evaluate.bat is purposefully designed for "reevaluation", i.e., it deletes all previous results from results/fights before starting new one
+-- beware that previous fights are not deleted from results/all-results.csv
+
+2) intended use is to evaluate "one-bot" at a time (i.e. add new bot into batch-fight.properties and evaluate it)
+-- if you fill it at once then
+---- a) a lot of fights will happen twice
+---- b) there is higher chance you will make a mistake along the way ruining the evaluation
