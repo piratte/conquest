@@ -46,6 +46,8 @@ public class Engine {
 		 * Original Warlight fight without luck:
 		 * -- each attacking army has 60% chance to kill one defending army
 		 * -- each defending army has 70% chance to kill one attacking army
+		 * 
+		 * You may use: {@link Engine#doAttack_ORIGINAL_A60_D70(Random, int, int)} method for off-engine simulation.
 		 */
 		ORIGINAL_A60_D70,
 
@@ -53,6 +55,8 @@ public class Engine {
 		 * RISK-like attack
 		 * -- fight happens in round until one of side is fully wiped out
 		 * -- each round there is a 60% chance that 1 defending army is killed and 70% chance that 1 attacking army is killed (independent variables)
+		 * 
+		 * You may use: {@link Engine#doAttack_CONTINUAL_1_1_A60_D70(Random, int, int)} method for off-engine simulation.
 		 */
 		CONTINUAL_1_1_A60_D70
 		
@@ -505,14 +509,43 @@ public class Engine {
 		}
 	}
 	
-	private static class FightResult {
+	public static enum FightSide {
+		ATTACKER,
+		DEFENDER
+	}
+	
+	public static class FightResult {
+		public FightSide winner;
+		
 		public int attackersDestroyed;
 		public int defendersDestroyed;
 		
-		public FightResult(int attackersDestroyed, int defendersDestroyed) {
-			super();
+		public FightResult() {
+			winner = null;
+			attackersDestroyed = 0;			
+			defendersDestroyed = 0;
+		}
+		
+		public FightResult(FightSide winner, int attackersDestroyed, int defendersDestroyed) {
+			this.winner = winner;
 			this.attackersDestroyed = attackersDestroyed;
 			this.defendersDestroyed = defendersDestroyed;
+		}
+		
+		protected void postProccessFightResult(int attackingArmies, int defendingArmies) {		
+			if(attackersDestroyed >= attackingArmies)
+			{
+				if (defendersDestroyed >= defendingArmies)
+					defendersDestroyed = defendingArmies - 1;
+				
+				attackersDestroyed = attackingArmies;
+			}	
+			
+			if (defendersDestroyed >= defendingArmies) { //attack success
+				winner = FightSide.ATTACKER;
+			} else {
+				winner = FightSide.DEFENDER;
+			}
 		}
 		
 	}
@@ -538,43 +571,39 @@ public class Engine {
 		FightResult result = null;
 		
 		switch (config.fight) {
-		case ORIGINAL_A60_D70:      result = doOriginalAttack(random, attackingArmies, defendingArmies, 0.6, 0.7);  break;
-		case CONTINUAL_1_1_A60_D70: result = doContinualAttack(random, attackingArmies, defendingArmies, 0.6, 0.7); break;
+		case ORIGINAL_A60_D70:      result = doAttack_ORIGINAL_A60_D70(     random, attackingArmies, defendingArmies); break;
+		case CONTINUAL_1_1_A60_D70: result = doAttack_CONTINUAL_1_1_A60_D70(random, attackingArmies, defendingArmies); break;
 		}
 		
-		int attackersDestroyed = result.attackersDestroyed;
-		int defendersDestroyed = result.defendersDestroyed;
-		
-		if(attackersDestroyed >= attackingArmies)
-		{
-			if (defendersDestroyed >= defendingArmies)
-				defendersDestroyed = defendingArmies - 1;
-			
-			attackersDestroyed = attackingArmies;
-		}		
-		
-		//process result of attack
-		if(defendersDestroyed >= defendingArmies) //attack success
-		{
+		switch (result.winner) {
+		case ATTACKER: //attack success
 			fromRegion.setArmies(fromRegion.getArmies() - attackingArmies);
 			toRegion.setPlayerName(move.getPlayerName());
-			toRegion.setArmies(attackingArmies - attackersDestroyed);
-		}
-		else //attack fail
-		{
-			fromRegion.setArmies(fromRegion.getArmies() - attackersDestroyed);
-			toRegion.setArmies(toRegion.getArmies() - defendersDestroyed);
+			toRegion.setArmies(attackingArmies - result.attackersDestroyed);
+			break; 
+		case DEFENDER: //attack fail
+			fromRegion.setArmies(fromRegion.getArmies() - result.attackersDestroyed);
+			toRegion.setArmies(toRegion.getArmies() - result.defendersDestroyed);
+			break;
+		default:
+			throw new RuntimeException("Unhandled FightResult.winner: " + result.winner);
 		}
 		
 		if (gui != null) {
-			gui.attackResult(fromRegion, toRegion, attackersDestroyed, defendersDestroyed);
+			gui.attackResult(fromRegion, toRegion, result.attackersDestroyed, result.defendersDestroyed);
 		}
 	}
 	
+	public static FightResult doAttack_ORIGINAL_A60_D70(Random random, int attackingArmies, int defendingArmies) {
+		return doOriginalAttack(random, attackingArmies, defendingArmies, 0.6, 0.7);
+	}
 	
-
+	public static FightResult doAttack_CONTINUAL_1_1_A60_D70(Random random, int attackingArmies, int defendingArmies) {
+		return doContinualAttack(random, attackingArmies, defendingArmies, 0.6, 0.7);
+	}
+	
 	public static FightResult doOriginalAttack(Random random, int attackingArmies, int defendingArmies, double defenderDestroyedChance, double attackerDestroyedChance) {
-		FightResult result = new FightResult(0, 0);
+		FightResult result = new FightResult();
 		
 		for(int t=1; t<=attackingArmies; t++) //calculate how much defending armies are destroyed
 		{
@@ -588,11 +617,12 @@ public class Engine {
 			if(rand < attackerDestroyedChance) //70% chance to destroy one attacking army
 				result.attackersDestroyed++;
 		}
+		result.postProccessFightResult(attackingArmies, defendingArmies);
 		return result;
 	}
 	
 	public static FightResult doContinualAttack(Random random, int attackingArmies, int defendingArmies, double defenderDestroyedChance, double attackerDestroyedChance) {
-		FightResult result = new FightResult(0, 0);
+		FightResult result = new FightResult();
 		
 		while (result.attackersDestroyed < attackingArmies && result.defendersDestroyed < defendingArmies) {
 			// ATTACKERS STRIKE
@@ -604,6 +634,7 @@ public class Engine {
 			if (rand < attackerDestroyedChance) ++result.attackersDestroyed;
 		}
 		
+		result.postProccessFightResult(attackingArmies, defendingArmies);
 		return result;
 	}
 
