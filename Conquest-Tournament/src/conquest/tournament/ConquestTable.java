@@ -68,11 +68,11 @@ public class ConquestTable {
 		}
 		
 		public String getCSVHeader() {
-			return "games;wins;winsAvg;draws;drawsAvg;loses;losesAvg;regions;regionsAvg;armies;armiesAvg";
+			return "games;wins;winsAvg;draws;drawsAvg;loses;losesAvg;rounds;roundsAvg;regions;regionsAvg;armies;armiesAvg";
 		}
 		
 		public String getCSV() {
-			return games + ";" + wins + ";" + winsAvg + ";" + draws + ";" + drawsAvg + ";" + loses + ";" + losesAvg + ";" + regions + ";" + regionsAvg + ";" + armies + ";" + armiesAvg;
+			return games + ";" + wins + ";" + winsAvg + ";" + draws + ";" + drawsAvg + ";" + loses + ";" + losesAvg + ";" + rounds + ";" + roundsAvg + ";" + regions + ";" + regionsAvg + ";" + armies + ";" + armiesAvg;
 		}
 		
 	}
@@ -174,7 +174,7 @@ public class ConquestTable {
 		/**
 		 * KEY1 won 'value' of games over KEY2
 		 */
-		public LazyMap<String, Map<String, MatchSummary>> wins = new LazyMap<String, Map<String, MatchSummary>>() {
+		public LazyMap<String, Map<String, MatchSummary>> matches = new LazyMap<String, Map<String, MatchSummary>>() {
 
 			@Override
 			protected Map<String, MatchSummary> create(final String key1) {
@@ -209,9 +209,9 @@ public class ConquestTable {
 			bot2.addGame(rounds, bot2Win, bot2Regions, bot2Armies);
 			
 			if (bot1Id.compareTo(bot2Id) < 0) {
-				wins.get(bot1Id).get(bot2Id).addGame(rounds, bot1Win, bot1Regions, bot1Armies);
+				matches.get(bot1Id).get(bot2Id).addGame(rounds, bot1Win, bot1Regions, bot1Armies);
 			} else {
-				wins.get(bot2Id).get(bot1Id).addGame(rounds, bot2Win, bot2Regions, bot2Armies);
+				matches.get(bot2Id).get(bot1Id).addGame(rounds, bot2Win, bot2Regions, bot2Armies);
 			}			
 		}
 		
@@ -220,9 +220,9 @@ public class ConquestTable {
 				bot.resetMatches();
 			}
 			
-			for (String botId1 : wins.keySet()) {
-				for (String botId2 : wins.get(botId1).keySet()) {
-					MatchSummary match = wins.get(botId1).get(botId2);
+			for (String botId1 : matches.keySet()) {
+				for (String botId2 : matches.get(botId1).keySet()) {
+					MatchSummary match = matches.get(botId1).get(botId2);
 					
 					Player bot1Win;
 					Player bot2Win;
@@ -333,7 +333,20 @@ public class ConquestTable {
 			Collections.sort(botIds, new Comparator<String>() {
 				@Override
 				public int compare(String o1, String o2) {
-					return summary.bots.get(o2).matchWins - summary.bots.get(o1).matchWins;
+					int result = summary.bots.get(o2).matchWins - summary.bots.get(o1).matchWins;
+					if (result != 0) return result;
+					MatchSummary match;
+					if (o1.compareTo(o2) < 0) {
+						match = summary.matches.get(o1).get(o2);
+						result = match.loses - match.wins;						
+					} else {
+						match = summary.matches.get(o2).get(o1);
+						result = match.wins - match.loses;
+					}
+					if (result != 0) return result;
+					result = summary.bots.get(o2).wins - summary.bots.get(o1).wins;
+					if (result != 0) return result;
+					return summary.bots.get(o2).rounds - summary.bots.get(o1).rounds;
 				}
 			});
 			
@@ -368,9 +381,9 @@ public class ConquestTable {
 					if (bot1Id.equals(bot2Id)) writer.print("x");
 					else {
 						if (bot1Id.compareTo(bot2Id) < 0) {
-							writer.print("[" + summary.wins.get(bot1Id).get(bot2Id).wins + " : " + summary.wins.get(bot1Id).get(bot2Id).loses + "]");
+							writer.print("[" + summary.matches.get(bot1Id).get(bot2Id).wins + " : " + summary.matches.get(bot1Id).get(bot2Id).loses + "]");
 						} else {
-							writer.print("[" + summary.wins.get(bot2Id).get(bot1Id).loses + " : " + summary.wins.get(bot1Id).get(bot2Id).wins + "]");
+							writer.print("[" + summary.matches.get(bot2Id).get(bot1Id).loses + " : " + summary.matches.get(bot2Id).get(bot1Id).wins + "]");
 						}
 					}
 				}
