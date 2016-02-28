@@ -1,4 +1,4 @@
-package conquest.bot.map;
+package conquest.game;
 
 public enum Player {
 

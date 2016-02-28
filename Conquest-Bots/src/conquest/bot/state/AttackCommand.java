@@ -1,6 +1,6 @@
 package conquest.bot.state;
 
-import conquest.bot.map.Player;
+import conquest.game.Player;
 import conquest.game.world.Region;
 
 public class AttackCommand implements Cloneable {

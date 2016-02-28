@@ -1,1 +1,1 @@
-java -cp "d:\Workspaces\MFF\NAIL069-UI1\Conquest\GIT\Conquest\bin\;d:\Workspaces\MFF\NAIL069-UI1\Conquest\GIT\Conquest-Tournament\bin;d:\Workspaces\MFF\NAIL069-UI1\Conquest\GIT\Conquest-Tournament\lib\*" conquest.tournament.ConquestTableConsole -t ./results/fights -s results-summary.csv
+java -cp "../Conquest/bin/;../Conquest-Tournament/bin;../Conquest-Tournament/lib/*" conquest.tournament.ConquestTableConsole -t ./results/fights -s results-summary.csv

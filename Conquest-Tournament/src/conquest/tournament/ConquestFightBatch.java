@@ -45,6 +45,7 @@ public class ConquestFightBatch {
 		
 		for (Entry<Object, Object> entries : bots.entrySet()) {
 			String otherBotId = entries.getKey().toString();
+			if (otherBotId.startsWith(";")) continue;
 			String otherBotInit = entries.getValue().toString();
 			
 			if (botId.equals(otherBotId)) continue;

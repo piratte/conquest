@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import conquest.bot.BotState;
-import conquest.bot.map.Player;
+import conquest.game.Player;
 import conquest.game.RegionData;
 import conquest.game.world.Continent;
 import conquest.game.world.Region;

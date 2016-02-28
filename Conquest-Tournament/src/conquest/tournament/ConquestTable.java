@@ -5,14 +5,16 @@ import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import conquest.game.Player;
 import conquest.game.Team;
 import conquest.tournament.utils.CSV;
 import conquest.tournament.utils.CSV.CSVRow;
-import conquest.utils.HashMapMapInt;
+import conquest.utils.LazyMap;
 
 /**
  * Summarize table.csv that ConquestFight may incrementally output.
@@ -21,9 +23,7 @@ import conquest.utils.HashMapMapInt;
  */
 public class ConquestTable {
 	
-	public static class BotSummary {
-		
-		public String botId;
+	public static class FightsSummary {
 		
 		public int games;
 		
@@ -32,6 +32,9 @@ public class ConquestTable {
 		
 		public int wins;
 		public double winsAvg;
+		
+		public int draws;
+		public double drawsAvg;
 		
 		public int loses;
 		public double losesAvg;
@@ -42,65 +45,199 @@ public class ConquestTable {
 		public int armies;
 		public double armiesAvg;
 		
-		public void addGame(int rounds, boolean victory, int regions, int armies) {
+		public void addGame(int rounds, Player winner, int regions, int armies) {
 			++games;
 			
 			this.rounds += rounds;
-			if (victory) ++wins;
-			else ++loses;
+			switch (winner) {
+			case ME: ++wins; break;
+			case NEUTRAL: ++draws; break;
+			case OPPONENT: ++loses; break;
+			default: throw new RuntimeException("Unhandled winner = " + winner);
+			}
+
 			this.regions += regions;
 			this.armies += armies;
 			
 			roundsAvg  = ((double)this.rounds) / ((double)games);
 			winsAvg     = ((double)wins) / ((double)games);
+			drawsAvg     = ((double)draws) / ((double)games);
 			losesAvg    = ((double)loses) / ((double)games);
 			regionsAvg = ((double)this.regions) / ((double)games);
 			armiesAvg  = ((double)this.armies) / ((double)games);
 		}
 		
 		public String getCSVHeader() {
-			return "botId;games;wins;winsAvg;loses;losesAvg;regions;regionsAvg;armies;armiesAvg";
+			return "games;wins;winsAvg;draws;drawsAvg;loses;losesAvg;regions;regionsAvg;armies;armiesAvg";
 		}
 		
 		public String getCSV() {
-			return botId + ";" + games + ";" + wins + ";" + winsAvg + ";" + loses + ";" + losesAvg + ";" + regions + ";" + regionsAvg + ";" + armies + ";" + armiesAvg;
+			return games + ";" + wins + ";" + winsAvg + ";" + draws + ";" + drawsAvg + ";" + loses + ";" + losesAvg + ";" + regions + ";" + regionsAvg + ";" + armies + ";" + armiesAvg;
+		}
+		
+	}
+	
+	public static class BotSummary extends FightsSummary {
+		
+		public String botId;
+		
+		public int matches;
+		
+		public int matchWins;
+		public double matchWinsAvg;
+		
+		public int matchDraws;
+		public double matchDrawsAvg;
+		
+		public int matchLoses;
+		public double matchLosesAvg;
+		
+		public BotSummary(String botId) {
+			this.botId = botId;
+		}
+		
+		public void resetMatches() {
+			matches = 0;
+			matchWins = 0;
+			matchDrawsAvg = 0;
+			matchDraws = 0;
+			matchDrawsAvg = 0;
+			matchLoses = 0;
+			matchLosesAvg = 0;
+		}
+		
+		public void addMatch(Player winner) {
+			++matches;
+			
+			switch (winner) {
+			case ME:       ++matchWins; break;
+			case NEUTRAL:  ++matchDraws; break;
+			case OPPONENT: ++matchLoses; break;			
+			}
+			
+			matchWinsAvg  = ((double)matchWins)  / ((double)matches);
+			matchDrawsAvg = ((double)matchDraws) / ((double)matches);
+			matchLosesAvg = ((double)matchLoses) / ((double)matches);
+		}
+
+		public String getCSVHeader() {
+			return "botId;matches;matchesWins;matchesWinsAvg;matchesDraws;matchesDrawsAvg;matchesLoses;matchesLosesAvg;" + super.getCSVHeader();
+		}
+		
+		public String getCSV() {
+			return botId + ";" + matches + ";" + matchWins + ";" + matchWinsAvg + ";" + matchDraws + ";" + matchDrawsAvg + ";" + matchLoses + ";" + matchLosesAvg + ";" + super.getCSV();
+		}
+		
+	}
+	
+	public static class MatchSummary extends FightsSummary {
+		
+		public String bot1Id;
+		public String bot2Id;
+		
+		public Team result = Team.NEUTRAL;
+		
+		public MatchSummary(String bot1Id, String bot2Id) {
+			this.bot1Id = bot1Id;
+			this.bot2Id = bot2Id;
+		}
+
+		public void addGame(int rounds, Player winner, int regions, int armies) {
+			super.addGame(rounds, winner, regions, armies);
+			
+			if (wins > loses) result = Team.PLAYER_1;
+			else if (wins < loses) result = Team.PLAYER_2;
+			else result = Team.NEUTRAL;
+		}
+		
+		public String getCSVHeader() {
+			return "bot1Id;bot2Id;result;" + super.getCSVHeader();
+		}
+		
+		public String getCSV() {
+			return bot1Id + ";" + bot2Id + ";" + result + ";" + super.getCSV();
 		}
 		
 	}
 	
 	public static class TableSummary {
 		
-		public Map<String, BotSummary> bots = new HashMap<String, BotSummary>();
+		public Map<String, BotSummary> bots = new LazyMap<String, BotSummary>() {
+
+			@Override
+			protected BotSummary create(String key) {
+				return new BotSummary(key);
+			}
+			
+		};
 		
 		/**
 		 * KEY1 won 'value' of games over KEY2
 		 */
-		public HashMapMapInt<String, String> wins = new HashMapMapInt<String, String>();
+		public LazyMap<String, Map<String, MatchSummary>> wins = new LazyMap<String, Map<String, MatchSummary>>() {
+
+			@Override
+			protected Map<String, MatchSummary> create(final String key1) {
+				return new LazyMap<String, MatchSummary>() {
+
+					@Override
+					protected MatchSummary create(final String key2) {						
+						return new MatchSummary(key1, key2);
+					}
+					
+				};
+			}
+			
+		};
 		
 		public void addGame(String bot1Id, String bot2Id, Team winner, int rounds, int bot1Regions, int bot1Armies, int bot2Regions, int bot2Armies) {
 			
-			boolean bot1Win = winner == Team.PLAYER_1;
-			boolean bot2Win = winner == Team.PLAYER_2;
+			Player bot1Win;
+			Player bot2Win;
 			
-			BotSummary bot1 = getOrCreate(bot1Id);
-			BotSummary bot2 = getOrCreate(bot2Id);
+			switch (winner) {
+			case NEUTRAL:  bot1Win = Player.NEUTRAL;  bot2Win = Player.NEUTRAL;  break;
+			case PLAYER_1: bot1Win = Player.ME;       bot2Win = Player.OPPONENT; break;
+			case PLAYER_2: bot1Win = Player.OPPONENT; bot2Win = Player.ME;       break;
+			default: throw new RuntimeException("Unhandled winner = " + winner);
+			}
+			
+			BotSummary bot1 = bots.get(bot1Id);
+			BotSummary bot2 = bots.get(bot2Id);
 			
 			bot1.addGame(rounds, bot1Win, bot1Regions, bot1Armies);
 			bot2.addGame(rounds, bot2Win, bot2Regions, bot2Armies);
 			
-			if (bot1Win) wins.inc(bot1Id, bot2Id);
-			if (bot2Win) wins.inc(bot2Id, bot1Id);			
+			if (bot1Id.compareTo(bot2Id) < 0) {
+				wins.get(bot1Id).get(bot2Id).addGame(rounds, bot1Win, bot1Regions, bot1Armies);
+			} else {
+				wins.get(bot2Id).get(bot1Id).addGame(rounds, bot2Win, bot2Regions, bot2Armies);
+			}			
 		}
 		
-		private BotSummary getOrCreate(String botId) {
-			BotSummary summary = bots.get(botId);
-			if (summary != null) return summary;
+		public void computeMatchWins() {
+			for (BotSummary bot : bots.values()) { 
+				bot.resetMatches();
+			}
 			
-			summary = new BotSummary();
-			summary.botId = botId;
-			bots.put(botId, summary);
-			
-			return summary;
+			for (String botId1 : wins.keySet()) {
+				for (String botId2 : wins.get(botId1).keySet()) {
+					MatchSummary match = wins.get(botId1).get(botId2);
+					
+					Player bot1Win;
+					Player bot2Win;
+					
+					switch (match.result) {
+					case NEUTRAL:  bot1Win = Player.NEUTRAL;  bot2Win = Player.NEUTRAL;  break;
+					case PLAYER_1: bot1Win = Player.ME;       bot2Win = Player.OPPONENT; break;
+					case PLAYER_2: bot1Win = Player.OPPONENT; bot2Win = Player.ME;       break;
+					default: throw new RuntimeException("Unhandled match.result = " + match.result);
+					} 
+					
+					bots.get(botId1).addMatch(bot1Win);
+					bots.get(botId2).addMatch(bot2Win);
+				}
+			}
 		}
 		
 	}
@@ -131,6 +268,10 @@ public class ConquestTable {
 					ConquestTable.readTable(file, summary);
 				}
 			}
+			
+			System.out.println("Summarizing matches...");
+			summary.computeMatchWins();
+			
 			System.out.println("Writing: " + summaryFileOut.getAbsolutePath());
 			ConquestTable.writeSummary(summary, summaryFileOut);
 		} else {
@@ -179,7 +320,7 @@ public class ConquestTable {
 		return result;
 	}
 	
-	public static void writeSummary(TableSummary summary, File summaryFileOut) {
+	public static void writeSummary(final TableSummary summary, File summaryFileOut) {
 		
 		if (summaryFileOut.exists()) summaryFileOut.delete();
 		
@@ -189,11 +330,16 @@ public class ConquestTable {
 			writer = new PrintWriter(new FileOutputStream(summaryFileOut));
 			
 			List<String> botIds = new ArrayList<String>( summary.bots.keySet() );
-			Collections.sort(botIds);
+			Collections.sort(botIds, new Comparator<String>() {
+				@Override
+				public int compare(String o1, String o2) {
+					return summary.bots.get(o2).matchWins - summary.bots.get(o1).matchWins;
+				}
+			});
 			
 			// HEADER
 			
-			writer.print("botId;victories");
+			writer.print("botId;matchWins;gameWins");
 			
 			for (String botId : botIds) {
 				writer.print(";");
@@ -213,12 +359,20 @@ public class ConquestTable {
 				
 				writer.print(bot1Id);
 				writer.print(";");
+				writer.print(bot.matchWins);
+				writer.print(";");
 				writer.print(bot.wins);
 				
 				for (String bot2Id : botIds) {
 					writer.print(";");					
 					if (bot1Id.equals(bot2Id)) writer.print("x");
-					else writer.print("[" + summary.wins.get(bot1Id).get(bot2Id) + " : " + summary.wins.get(bot2Id).get(bot1Id) + "]");
+					else {
+						if (bot1Id.compareTo(bot2Id) < 0) {
+							writer.print("[" + summary.wins.get(bot1Id).get(bot2Id).wins + " : " + summary.wins.get(bot1Id).get(bot2Id).loses + "]");
+						} else {
+							writer.print("[" + summary.wins.get(bot2Id).get(bot1Id).loses + " : " + summary.wins.get(bot1Id).get(bot2Id).wins + "]");
+						}
+					}
 				}
 				
 				writer.print(";");
