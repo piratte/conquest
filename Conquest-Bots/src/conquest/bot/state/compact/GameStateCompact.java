@@ -154,7 +154,7 @@ public class GameStateCompact implements Cloneable {
 	}
 	
 	/**
-	 * How many armies does/will 'player' have to place? WARNING: time O(n)!
+	 * How many armies does/will 'player' have to place in this/next turn given this state? WARNING: time O(n)!
 	 * @param player
 	 * @return
 	 */
@@ -163,7 +163,7 @@ public class GameStateCompact implements Cloneable {
 		for (Continent continent : Continent.values()) {
 			if (owned(continent, player)) result += continent.reward;
 		}
-		return result;
+		return 5+result;
 	}
 	
 	// =======================

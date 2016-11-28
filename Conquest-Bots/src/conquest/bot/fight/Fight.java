@@ -1,15 +1,23 @@
 package conquest.bot.fight;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Fight {
 	
 	public static final double ATTACKERS_CHANCE_TO_KILL = 0.6;
 	public static final double DEFENDERS_CHANCE_TO_KILL = 0.7;
 	
+	private static Map<Long, Long> factorialCache = new HashMap<Long, Long>();
+	
 	public static long factorial(long n) {
-		long result = 1;
+		Long result = factorialCache.get(n);
+		if (result != null) return result;
+		result = 1l;
 		for (long i = 2; i <= n; ++i) {
 			result *= i;
 		}
+		factorialCache.put(n, result);
 		return result;
 	}
 	
@@ -32,6 +40,13 @@ public class Fight {
 		return ((double)NK(round, number)) * Math.pow(chanceToKill, number) * Math.pow(1-chanceToKill, round - number);		
 	}
 	
+	/**
+	 * Aggregated version of {@link #KillChance(long, long, double)}. Chance you will kill 'number' by the fight round 1-'round'.
+	 * @param number
+	 * @param round
+	 * @param chanceToKill
+	 * @return
+	 */
 	public static double KillAtLeastChance(long number, long round, double chanceToKill) {
 		if (round <= 0) return 0;
 		if (number > round) return 0;

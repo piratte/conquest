@@ -256,8 +256,8 @@ public class ConquestBot extends GameBot
 	public static void runInternal() {
 		Config config = new Config();
 		
-		config.bot1Init = "internal:conquest.bot.custom.AggressiveBot";
-		//config.bot1Init = "dir;process:../Conquest-Bots;java -cp ./bin;../Conquest/bin conquest.bot.external.JavaBot conquest.bot.custom.AggressiveBot ./AggressiveBot.log";
+		config.bot1Init = "internal:conquest.bot.playground.ConquestBot";
+		//config.bot1Init = "dir;process:../Conquest-Bots;java -cp ./bin;../Conquest/bin conquest.bot.external.JavaBot conquest.bot.playground.ConquestBot ./ConquestBot.log";
 		config.bot2Init = "internal:conquest.bot.BotStarter";
 		//config.bot2Init = "human";
 		
@@ -281,7 +281,7 @@ public class ConquestBot extends GameBot
 	
 	public static void runExternal() {
 		BotParser parser = new BotParser(new ConquestBot());
-		parser.setLogFile(new File("./AggressiveBot.log"));
+		parser.setLogFile(new File("./ConquestBot.log"));
 		parser.run();
 	}
 
