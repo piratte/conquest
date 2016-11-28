@@ -52,15 +52,15 @@ this will spare you the problems with "invalid" main of the bot you want to exec
 
 ## PROJECT STRUCUTURE
 
-Conquest/ -> simulator and visualizator of Warlight AI Challenge
+**Conquest** -> simulator and visualizator of Warlight AI Challenge
 
-Conquest-Bots/ -> project providing better support for Java bots; includes OOP as well as compact representation of the game state. AggressiveBot example runnable as is.
+**Conquest-Bots** -> project providing better support for Java bots; includes OOP as well as compact representation of the game state. AggressiveBot example runnable as is.
 
-Conquest-Playground/ -> stub project for your code; it contains ConquestBost class that is copy-pasted code from AggressiveBot also runnable and an entry point for you to start coding your bot.
+**Conquest-Playground** -> stub project for your code; it contains ConquestBost class that is copy-pasted code from AggressiveBot also runnable and an entry point for you to start coding your bot.
 
-Conquest-Tournament/ -> automation of matches
+**Conquest-Tournament** -> automation of matches
 
-Conquest-Competition/ -> folder stub for perfoming table-type tournaments
+**Conquest-Competition** -> folder stub for perfoming table-type tournaments
 
 ## SCREENSHOTS
 
