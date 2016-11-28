@@ -64,8 +64,12 @@ public class InternalRobot implements Robot {
 	private HumanRobot humanHijack;
 
 	private MyKeyListener myKeyListener;
+
+	private String botFQCN;
 	
 	public InternalRobot(String playerName, String botFQCN) throws IOException {
+		this.botFQCN = botFQCN;
+		
 		botInput = new InputOutputStream();
 		botOutput = new InputOutputStream();
 		
@@ -169,6 +173,11 @@ public class InternalRobot implements Robot {
 			}
 			humanHijack = null;
 		}
+	}
+
+	@Override
+	public String getRobotName() {
+		return botFQCN.substring(1+botFQCN.lastIndexOf("."));
 	}
 
 }

@@ -123,5 +123,10 @@ public class ProcessRobot implements Robot
 			child = null;
 		}
 	}
+	
+	@Override
+	public String getRobotName() {
+		return robot.getRobotName();
+	}
 
 }

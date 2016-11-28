@@ -115,4 +115,9 @@ public class HumanRobot implements Robot {
 		running = false;
 	}
 
+	@Override
+	public String getRobotName() {
+		return "Human";
+	}
+
 }

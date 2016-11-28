@@ -255,7 +255,7 @@ public class RunGame
 			if (config.forceHumanVisualization) {
 				gui.positions = gui.positionsHuman;
 			}
-			gui = new GUI(config.playerName1, config.playerName2);
+			gui = new GUI(config.playerName1, config.playerName2, robot1.getRobotName(), robot2.getRobotName());
 		}
 		
 		//start the engine

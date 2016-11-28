@@ -138,5 +138,10 @@ public class IORobot implements Robot
 	public void finish() {
 		handler.stop();
 	}
+
+	@Override
+	public String getRobotName() {
+		return config.playerName;
+	}
 	
 }

@@ -49,6 +49,8 @@ public interface Robot {
 		}
 		
 	}
+	
+	public String getRobotName();
 
 	public void setup(RobotConfig config);
 	

@@ -151,13 +151,13 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 	
 	private JLayeredPane mainLayer;
 	
-	public GUI(String playerName1, String playerName2)
+	public GUI(String playerEngineName1, String playerEngineName2, String playerName1, String playerName2)
 	{
 		System.out.println("GUI: Click to advance to next round.");
 		System.out.println("GUI: Hold right mouse button to QUICKLY advance through many rounds.");
 		
-		this.playerName1 = playerName1;
-		this.playerName2 = playerName2;
+		this.playerName1 = playerEngineName1;
+		this.playerName2 = playerEngineName2;
 		
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 		this.setTitle("Interactive Map");
@@ -213,14 +213,14 @@ public class GUI extends JFrame implements MouseListener, KeyListener
 		p1.setLocation(45,50);
 		p1.setTeam(Team.PLAYER_1);
 		p1.setNameLabel(playerName1);
-		p1.setText("P1");
+		p1.setText(playerEngineName1);
 		mainLayer.add(p1, JLayeredPane.PALETTE_LAYER);
 		
 		p2 = new RegionInfo();
 		p2.setLocation(45,85);
 		p2.setTeam(Team.PLAYER_2);
 		p2.setNameLabel(playerName2);
-		p2.setText("P2");
+		p2.setText(playerEngineName2);
 		mainLayer.add(p2, JLayeredPane.PALETTE_LAYER);
 		
 		notification = new GUINotif(mainLayer, 1015, 45, 200, 50);		
