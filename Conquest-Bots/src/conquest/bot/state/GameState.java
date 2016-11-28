@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import conquest.bot.BotState;
+import conquest.bot.state.compact.GameStateCompact;
 import conquest.game.Player;
 import conquest.game.RegionData;
 import conquest.game.world.Continent;
@@ -233,12 +234,21 @@ public class GameState {
 		reset(state);		
 	}
 	
+	public GameState(GameStateCompact gameStateCompact) {
+		reset(gameStateCompact);
+	}
+
 	/**
-	 * Fully (re)creates the state out of the {@link BotState}, throwing out all existing objects is has.
-	 * @param state
+	 * Recreates all STATE objects.
 	 */
-	private void reset(BotState state) {
-		// CREATE EMPTY STATES
+	private void reset() {
+		// INIT CONTINENTS
+		continents = new ContinentState[Continent.values().length+1];
+		for (int i = 1; i <= Continent.values().length; ++i) {
+			continents[i] = new ContinentState(Continent.values()[i-1]);
+		}
+		
+		// INIT REGIONS
 		regions = new RegionState[Region.values().length+1];
 		for (int i = 1; i <= Region.values().length; ++i) {
 			regions[i] = new RegionState(Region.values()[i-1]);
@@ -252,18 +262,64 @@ public class GameState {
 			}			
 		}
 		
-		continents = new ContinentState[Continent.values().length+1];
-		for (int i = 1; i <= Continent.values().length; ++i) {
-			continents[i] = new ContinentState(Continent.values()[i-1]);
-		}
-		
+		// INIT PLAYER STATES
 		players = new PlayerState[Player.values().length+1];
 		for (int i = 1; i <= Player.values().length; ++i) {
 			players[i] = new PlayerState(Player.values()[i-1]);
 		}
 		
+		// INIT PLAYERS
 		this.me  = players[Player.ME.id];
 		this.opp = players[Player.OPPONENT.id];
+	}
+	
+	/**
+	 * Fully (re)creates the state out of the {@link GameStateCompact}, throwing out all existing objects it has.
+	 * @param gameStateCompact
+	 */
+	private void reset(GameStateCompact gameStateCompact) {
+		reset();
+
+		// FILL IN STATES
+		for (Region region : Region.values()) {
+			// REGION
+			RegionState regionState = region(region);
+			regionState.armies = gameStateCompact.armiesAt(region);
+			regionState.owner = player(gameStateCompact.ownedBy(region));
+			
+			// CONTINENT
+			ContinentState continentState = continent(regionState.region);
+			continentState.regions.put(regionState.region, regionState);
+			continentState.owned.inc(gameStateCompact.ownedBy(region));
+			
+			// PLAYER STATE
+			PlayerState playerState = regionState.owner;
+			playerState.regions.put(regionState.region, regionState);
+			playerState.totalArmies += regionState.armies;
+		}
+		
+		// UPDATE CONTINENT OWNERSHIPS & PLACE ARMIES
+		for (Continent continent : Continent.values()) {
+			ContinentState continentState = continent(continent);
+			for (Player player : Player.values()) {
+				if (continentState.owned.get(player) == continentState.regions.size()) {
+					continentState.owner = player;
+					PlayerState playerState = player(player);
+					playerState.continents.put(continent, continentState);		
+					if (player != Player.NEUTRAL) {
+						playerState.placeArmies += continent.reward;
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Fully (re)creates the state out of the {@link BotState}, throwing out all existing objects it has.
+	 * @param state
+	 */
+	private void reset(BotState state) {
+		reset();
 
 		// FILL IN STATES
 		for (RegionData data : state.getMap().regions) {

@@ -15,14 +15,21 @@ public enum Continent {
 	Asia(5, 7),
 	Australia(6, 2);
 	
+	public static final int LAST_ID = 6;
+	
+	/**
+	 * Must be 1-based!
+	 */
 	public final int id;
 	public final int reward;
+	public final int continentFlag;
 	
 	private Set<Region> regions = null;
 
 	private Continent(int id, int reward) {
-		this.id = id;	
-		this.reward = reward;				
+		this.id = id;
+		this.reward = reward;	
+		this.continentFlag = 1 << (id-1);
 	}
 	
 	public Set<Region> getRegions() {
@@ -52,6 +59,18 @@ public enum Continent {
 			}
 		}
 		return id2Continent.get(id);
+	}
+	
+	private static Map<Integer, Continent> flagToContinent = null;
+	
+	public static Continent fromFlag(int continentFlag) {
+		if (flagToContinent == null) {
+			flagToContinent = new HashMap<Integer, Continent>();
+			for (Continent continent : Continent.values()) {
+				flagToContinent.put(continent.continentFlag, continent);
+			}
+		}
+		return flagToContinent.get(continentFlag);
 	}
 
 }

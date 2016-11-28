@@ -62,7 +62,12 @@ public enum Region {
 	New_Guinea("New Guinea", 40, Continent.Australia, false, 41, 42), 
 	Western_Australia("West. Australia", 41, Continent.Australia, false, 42), 
 	Eastern_Australia("East. Australia", 42, Continent.Australia, false);
+	
+	public static final int LAST_ID = 42;
 			
+	/**
+	 * Must be 1-based!
+	 */
 	public final int id;
 	public final Continent continent;
 	public final String mapName;
@@ -72,10 +77,15 @@ public enum Region {
 	public final boolean continentBorder;
 	
 	/**
+	 * Region flag.
+	 */
+	public final long regionFlag;
+	
+	/**
 	 * DO NOT USE, contains only "forward" neighbours. Use {@link #getNeighbours()} to obtain ALL neighbours.
 	 * Used for {@link GameMap} initialization only.
 	 */
-	private final int[] forwardNeighbourIds;
+	private final int[] forwardNeighbourIds;	
 	/**
 	 * DO NOT USE, contains only "forward" neighbours. Use {@link #getNeighbours()} to obtain ALL neighbours.
 	 * Used for {@link GameMap} initialization only.
@@ -85,13 +95,14 @@ public enum Region {
 	/**
 	 * List of all neighbour regions.
 	 */
-	private List<Region> allNeighbours = null;
+	private List<Region> allNeighbours = null;	
 	
-	private Region(String mapName, int id, Continent superRegion, boolean continentBorder, int... forwardNeighbourIds) {
+	private Region(String mapName, int id, Continent superRegion, boolean continentBorder, int... forwardNeighbourIds) {		
 		this.mapName = mapName;
 		this.id = id;
 		this.continent = superRegion;
 		this.continentBorder = continentBorder;
+		this.regionFlag = ((long)1) << (id-1);
 		this.forwardNeighbourIds = forwardNeighbourIds;
 	}
 	
@@ -168,6 +179,18 @@ public enum Region {
 			}
 		}
 		return id2Region.get(id);
+	}
+	
+	private static Map<Long, Region> flagToRegion = null;
+		
+	public static Region fromFlag(long regionFlag) {
+		if (flagToRegion == null) {
+			flagToRegion = new HashMap<Long, Region>();
+			for (Region region : Region.values()) {
+				flagToRegion.put(region.regionFlag, region);
+			}
+		}
+		return flagToRegion.get(regionFlag);
 	}
 
 }
