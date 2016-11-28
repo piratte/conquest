@@ -1,10 +1,14 @@
+# Warlight AI Challenge Clone
+
 Warlight AI Challenge engine (http://theaigames.com/competitions/warlight-ai-challenge) + interactive visual map + replays + internal bots (can be hijacked) + human players + automation.
 
 Forked from: https://github.com/skylogic004/conquest-engine-gui
 
 Heavily refactored (wrt. original Conquest codebase) ~ packages renamed, some classes renamed, etc., but communication protocol is still the same so it should work with original bots.
 
-**FEATURES**
+![alt tag](https://github.com/kefik/conquest-engine-gui/raw/master/Conquest/screenshot.png)
+
+## FEATURES
 
 1) possible to play with "internal" players (i.e. bots directly on java classpath), which allows you to perform better Java bot debugging
 
@@ -45,6 +49,20 @@ this will spare you the problems with "invalid" main of the bot you want to exec
 + Left click the map to advance to the next action.
 
 + Right click the map to fast forward.
+
+## PROJECT STRUCUTURE
+
+Conquest/ -> simulator and visualizator of Warlight AI Challenge
+
+Conquest-Bots/ -> project providing better support for Java bots; includes OOP as well as compact representation of the game state. AggressiveBot example runnable as is.
+
+Conquest-Playground/ -> stub project for your code; it contains ConquestBost class that is copy-pasted code from AggressiveBot also runnable and an entry point for you to start coding your bot.
+
+Conquest-Tournament/ -> automation of matches
+
+Conquest-Competition/ -> folder stub for perfoming table-type tournaments
+
+## SCREENSHOTS
 
 **AI vs AI**
 
