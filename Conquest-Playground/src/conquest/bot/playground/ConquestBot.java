@@ -262,9 +262,9 @@ public class ConquestBot extends GameBot
 		//config.bot2Init = "human";
 		
 		config.engine.botCommandTimeoutMillis = 24*60*60*1000;
-		//config.engine.botCommandTimeoutMillis = 5000;
+		//config.engine.botCommandTimeoutMillis = 20 * 1000;
 		
-		config.engine.maxGameRounds = 100;
+		config.engine.maxGameRounds = 200;
 		
 		config.engine.fight = FightMode.CONTINUAL_1_1_A60_D70;
 		
