@@ -10,6 +10,10 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
+/**
+ * Serves for the computation of victory probabilities of #ATTACKERS vs #DEFENDERS fights.
+ * @author Jimmy
+ */
 public class FightSimulation {
 	
 	public static class FightResults implements Serializable {
