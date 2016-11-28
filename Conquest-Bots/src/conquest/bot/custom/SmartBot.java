@@ -2,14 +2,12 @@ package conquest.bot.custom;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 import conquest.bot.BotParser;
-import conquest.bot.BotStarter;
-import conquest.bot.BotState;
-import conquest.bot.external.JavaBot;
 import conquest.bot.fight.FightSimulation.FightAttackersResults;
 import conquest.bot.fight.FightSimulation.FightDefendersResults;
 import conquest.bot.map.RegionBFS;
@@ -27,22 +25,31 @@ import conquest.engine.RunGame;
 import conquest.engine.RunGame.Config;
 import conquest.engine.RunGame.GameResult;
 import conquest.game.Player;
-import conquest.game.RegionData;
-import conquest.game.move.AttackTransferMove;
 import conquest.game.world.Continent;
 import conquest.game.world.Region;
 import conquest.view.GUI;
 
-public class AggressiveBot extends GameBot 
+/**
+ * MFF UK AI1 LABS 2015 - BEST CONQUEST BOT
+ *  
+ * Latest AI1 labs: bit.ly/mff-uk-ai1-labs
+ * 
+ * @author Federico Forti (fe0437serio@gmail.com) 
+ */
+public class SmartBot extends GameBot 
 {
 	
 	FightAttackersResults aRes;
 	FightDefendersResults dRes;
 	
-	public AggressiveBot() {		
+	List<PlaceCommand> placeCommands;
+	boolean start = true;
+	
+	
+	public SmartBot() {		
 		aRes = FightAttackersResults.loadFromFile(new File("FightSimulation-Attackers-A200-D200.obj"));
 		dRes = FightDefendersResults.loadFromFile(new File("FightSimulation-Defenders-A200-D200.obj"));
-		System.err.println("---==[ AGGRESSIVE BOT INITIALIZED ]==---");
+		System.err.println("---==[ SMART BOT INITIALIZED ]==---");
 	}
 	
 	@Override
@@ -81,11 +88,12 @@ public class AggressiveBot extends GameBot
 	
 	public int getPrefferedContinentPriority(Continent continent) {
 		switch (continent) {
-		case Australia:     return 1;
-		case South_America: return 2;
-		case North_America: return 3;
-		case Europe:        return 4;		
-		case Africa:        return 5;
+		
+		case South_America: return 1;
+		case Africa:        return 2;
+		case Australia:     return 3;
+		case Europe:        return 4;
+		case North_America: return 5;
 		case Asia:          return 6;
 		default:            return 7;
 		}
@@ -124,26 +132,89 @@ public class AggressiveBot extends GameBot
 		
 		int index = 0;
 		
+		float totScore=0;
+		
+		for(RegionState reg: mine){
+			totScore += getRegionScore(reg);
+		}
+		
 		while (armiesLeft > 0) {
-			result.add(new PlaceCommand(mine.get(index).region, 3));
-			armiesLeft -= 3;
+			
+			float score = getRegionScore(mine.get(index))/totScore;
+			//courage
+			score = score> 0.4 || start==true ? 1:score;
+			int putArmies = 2+(int) (score*state.me.placeArmies);
+			putArmies = putArmies>armiesLeft?armiesLeft:putArmies;
+			
+			result.add(new PlaceCommand(mine.get(index).region, putArmies));
+			
+			armiesLeft -= putArmies;
 			++index;
 			if (index >= mine.size()) index = 0;
 		}
+		start=false;
 		
+		placeCommands = result;
 		return result;
 	}
 	
 	private int getRegionScore(RegionState o1) {
+		
 		int result = 0;
 		
-		for (Region reg : o1.region.getNeighbours()) {
-			result += (state.region(reg).owned(Player.NEUTRAL) ? 1 : 0) * 5;
-			result += (state.region(reg).owned(Player.OPPONENT) ? 1 : 0) * 2;
+		float enemies = 0;
+		
+		for (RegionState reg : o1.neighbours) {
+			enemies += (reg.owned(Player.OPPONENT) ? reg.armies : 0);
+			result += (reg.owned(Player.NEUTRAL) ? 1 : 0) * 5000;
+			result += (reg.owned(Player.OPPONENT) ? 1 : 0) * (2000 + 4000/reg.armies);
 		}
+		
+		float intermediate = result;
+		
+		//SET REGION PRIORITY:
+
+		//BASED ON THE DIFFERENCE IN STRENGTH WITH THE OPPONENT
+		float strengthPriority = (enemies>0? (enemies/(float)(0.7*(o1.armies))) : 1);
+		
+		//BASED ON THE CONTINENT EASIER TO FINISH
+		Continent c1 = o1.region.continent;
+		
+		float continentPriority = getContinentPriority(c1);
+		continentPriority = state.continent(c1).ownedBy(Player.ME)?1:continentPriority;
+		
+		intermediate *= continentPriority * strengthPriority;
+		
+		result = ((int)intermediate !=0 ? (int)intermediate : result);
 		
 		return result;
 	}
+	
+	
+	private float getContinentPriority(Continent c1){
+		
+		float continentPriority=0;
+
+		for( Region reg: c1.getRegions()){
+			continentPriority += (state.region(reg).owned(Player.OPPONENT) ? 1 : 0) * 5;
+			continentPriority += (state.region(reg).owned(Player.NEUTRAL) ? 1 : 0) * 10;
+			continentPriority += (state.region(reg).owned(Player.ME) ? 1 : 0) * 20;
+		}
+		float size = c1.getRegions().size();
+		continentPriority /= size*size*size;
+		
+		return continentPriority;
+	}
+	
+	private int getAttackRegionScore(RegionState o1) {
+		
+		float importance = 1;
+		importance = (o1.owned(Player.OPPONENT)? 2 : 1);
+		int breakContinent = state.opp.ownsContinent(o1.region.continent)? 5:0;
+		return (int)(getContinentPriority(o1.region.continent)*20+(importance*o1.armies)+breakContinent);
+		
+	}
+	
 
 	// =============
 	// MOVING ARMIES
@@ -153,16 +224,63 @@ public class AggressiveBot extends GameBot
 	public List<MoveCommand> moveArmies(long timeout) {
 		List<MoveCommand> result = new ArrayList<MoveCommand>();
 		
-		// CAPTURE ALL REGIONS WE CAN
+		// CAPTURE REGIONS
 		for (RegionState from : state.me.regions.values()) {
-			for (RegionState to : from.neighbours) {
-				// DO NOT ATTACK OWN REGIONS
-				if (to.owned(Player.ME)) continue;
+			
+			for (PlaceCommand comm : placeCommands){
+				if (comm.region.id == from.region.id){
+					from.armies+=comm.armies;
+				}
+			}
+			
+			List<RegionState> neighbours = new ArrayList<RegionState>(Arrays.asList(from.neighbours));
+			
+			
+			// SORT THEM ACCORDING TO THEIR SCORE
+			Collections.sort(neighbours, new Comparator<RegionState>() {
+
+				@Override
+				public int compare(RegionState o1, RegionState o2) {
+					
+					int regionScore1 = getAttackRegionScore(o1);
+					int regionScore2 = getAttackRegionScore(o2);
+					return regionScore2 - regionScore1;
+				}
+
+			});
+			
+
+			float totalPriority=0;
+			
+			int i = 0;
+			int enemies=0;
+			while (i < neighbours.size()){
+				if(!neighbours.get(i).owned(Player.ME)){
+					if(neighbours.get(i).owned(Player.OPPONENT)) enemies++;
+					totalPriority += getAttackRegionScore(neighbours.get(i));
+					++i;
+				}else{
+					neighbours.remove(i);
+				}
+			}
+			
+			for (RegionState to : neighbours) {
 				
-				// IF YOU HAVE ENOUGH ARMY TO WIN WITH 70%
+				// IF YOU HAVE ENOUGH ARMY TO WIN WITH 0.7
 				if (shouldAttack(from, to, 0.7)) {
+					
 					// => ATTACK
-					result.add(attack(from, to, 0.7));
+					if(enemies==1 || neighbours.size()==1){
+						result.add(attackWithCourage(from, to));
+						break;
+					}else{
+						result.add(attack(from, to, 0.7));
+						from.armies-= getRequiredSoldiersToConquerRegion(from, to, 0.7);
+						
+					}
+					enemies--;
+				}else if(enemies==1 || getAttackRegionScore(to)/totalPriority>(0.35+(Math.random()*0.05))){
+					break;
 				}
 			}
 		}
@@ -186,7 +304,8 @@ public class AggressiveBot extends GameBot
 
 	private int getRequiredSoldiersToConquerRegion(RegionState from, RegionState to, double winProbability) {
 		int attackers = from.armies - 1;
-		int defenders = to.armies;
+		int persp = to.owned(Player.OPPONENT)? 2 : 0;
+		int defenders = to.armies+persp;
 		
 		for (int a = defenders; a <= attackers; ++a) {
 			double chance = aRes.getAttackersWinChance(a, defenders);
@@ -198,12 +317,18 @@ public class AggressiveBot extends GameBot
 		return Integer.MAX_VALUE;
 	}
 		
-	private boolean shouldAttack(RegionState from, RegionState to, double winProbability) {	
+	private boolean shouldAttack(RegionState from, RegionState to, double winProbability) {
+		
 		return from.armies > getRequiredSoldiersToConquerRegion(from, to, winProbability);
 	}
 	
 	private MoveCommand attack(RegionState from, RegionState to, double winProbability) {
 		MoveCommand result = new MoveCommand(from.region, to.region, getRequiredSoldiersToConquerRegion(from, to, winProbability));
+		return result;
+	}
+	
+	private MoveCommand attackWithCourage(RegionState from, RegionState to) {
+		MoveCommand result = new MoveCommand(from.region, to.region, from.armies-1);
 		return result;
 	}
 	
@@ -254,13 +379,10 @@ public class AggressiveBot extends GameBot
 	public static void runInternal() {
 		Config config = new Config();
 		
-		config.bot1Init = "internal:conquest.bot.custom.AggressiveBot";
-		//config.bot1Init = "dir;process:../Conquest-Bots;java -cp ./bin;../Conquest/bin conquest.bot.external.JavaBot conquest.bot.custom.AggressiveBot ./AggressiveBot.log";
-		config.bot2Init = "internal:conquest.bot.BotStarter";
-		//config.bot2Init = "human";
+		config.bot1Init = "internal:conquest.bot.custom.SmartBot";
+		config.bot2Init = "internal:conquest.bot.custom.AggressiveBot";
 		
 		config.engine.botCommandTimeoutMillis = 24*60*60*1000;
-		//config.engine.botCommandTimeoutMillis = 20 * 1000;
 		
 		config.engine.maxGameRounds = 200;
 		
@@ -278,14 +400,14 @@ public class AggressiveBot extends GameBot
 	}
 	
 	public static void runExternal() {
-		BotParser parser = new BotParser(new AggressiveBot());
-		parser.setLogFile(new File("./AggressiveBot.log"));
+		BotParser parser = new BotParser(new SmartBot());
+		parser.setLogFile(new File("./SmartBot.log"));
 		parser.run();
 	}
-
+	
 	public static void main(String[] args)
 	{
-		//JavaBot.exec(new String[]{"conquest.bot.custom.AggressiveBot", "./AggressiveBot.log"});		
+		//JavaBot.exec(new String[]{"conquest.bot.custom.SmartBot", "./SmartBot.log"});		
 		runInternal();
 	}
 
