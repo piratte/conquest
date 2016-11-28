@@ -4,9 +4,9 @@ Forked from: https://github.com/skylogic004/conquest-engine-gui
 
 Heavily refactored (wrt. original Conquest codebase) ~ packages renamed, some classes renamed, etc., but communication protocol is still the same so it should work with original bots.
 
-FEATURES
+**FEATURES**
 
-1) possible to play with "internal" players (i.e. bots directly on java classpath), which allows you to perform better Java bot debugging 
+1) possible to play with "internal" players (i.e. bots directly on java classpath), which allows you to perform better Java bot debugging
 
 -- you can hijack controls of internal players when the game is visualized (press 'H' to toggle PLR1 hijack, press 'J' to toggle PLR2 hijack)
 
@@ -20,17 +20,19 @@ FEATURES
 
 5) better GameState abstraction than plain BotState provided, use GameBot as a base class for your bots
 
-6) Conquest-Tournament project can be used to automate matches between bots using command line tools (see ConquestFightConsole and ConquestTableConsole classes); see Conquest-Competition for example how to quickly setup tournament
+6) slim GameStateCompact representation of the game state that can be used for performance searches (not the best, but quite ok); use GameStateCompact.fromGameState(gameState) you have in your GameBot
+
+7) Conquest-Tournament project can be used to automate matches between bots using command line tools (see ConquestFightConsole and ConquestTableConsole classes); see Conquest-Competition for example how to quickly setup tournament
 batch files (be sure to stop by and read Conquest-Competition/readme.txt)
 
-7) possibility to execute "process" player from within concrete directory, use "dir;process" as bot init command to specify the directory from which you would like the bot process to be executed
+8) possibility to execute "process" player from within concrete directory, use "dir;process" as bot init command to specify the directory from which you would like the bot process to be executed
 
 -- not a big feature but very handy for automation
 
 -- if you deal with Java bots, you might want to run your Java bots as "external bots" using "dir;process" indirectly running JavaBot class instead of original bot class (i.e. make JavaBot to instantiate and run your tournament bot);
 this will spare you the problems with "invalid" main of the bot you want to execute (as long as it has parameterless constructor)
 
-EXTRA GUI (KEYBOARD) CONTROLS
+**EXTRA GUI (KEYBOARD) CONTROLS**
 
 + 'N') skip to the next round
 
@@ -38,17 +40,17 @@ EXTRA GUI (KEYBOARD) CONTROLS
 
 + '+' / '-') Control how much time GUI will wait before it automatically advance to the next action (when enabled via 'C')
 
-EXTRA GUI (MOUSE) CONTROLS
+**EXTRA GUI (MOUSE) CONTROLS**
 
 + Left click the map to advance to the next action.
 
 + Right click the map to fast forward.
 
-AI vs AI
+**AI vs AI**
 
 ![alt tag](https://github.com/kefik/conquest-engine-gui/raw/master/Conquest/screenshot.png)
 
-HUMAN vs AI
+**HUMAN vs AI**
 
 ![alt tag](https://github.com/kefik/conquest-engine-gui/raw/master/Conquest/screenshot-human.png)
 
