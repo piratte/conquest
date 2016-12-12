@@ -23,6 +23,14 @@ public abstract class GameBot implements Bot {
 		this.fw = new FloydWarshall();
 	}
 	
+	/**
+	 * Overrides bot's internal game {@link #state}.
+	 * @param gameState
+	 */
+	public void enforceState(GameState gameState) {
+		this.state = gameState;
+	}
+	
 	public void updateState(BotState botState) {
 		this.botState = botState;
 		if (this.state == null) this.state = new GameState(botState);
