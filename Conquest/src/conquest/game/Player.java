@@ -27,6 +27,15 @@ public enum Player {
 		return null;
 	}
 	
+	public static Player swapPlayer(Player player) {
+		switch (player) {
+		case ME:       return Player.OPPONENT;
+		case OPPONENT: return Player.ME;
+		case NEUTRAL:  return Player.NEUTRAL;
+		}
+		throw new RuntimeException("Unhandled player: " + player);
+	}
+	
 	
 	
 }

@@ -31,26 +31,26 @@ public interface Bot {
 	/**
 	 * CHOOSE REGIONS - called only at the beginning.
 	 * @param state
-	 * @param timeOut
+	 * @param timeoutMillis in milliseconds
 	 * @return
 	 */
-	public ArrayList<RegionData> getPreferredStartingRegions(BotState state, Long timeOut);
+	public ArrayList<RegionData> getPreferredStartingRegions(BotState state, Long timeoutMillis);
 	
 	/**
 	 * PLACE ARMIES - distribute armies between your regions.
 	 * @param state
-	 * @param timeOut
+	 * @param timeoutMillis in milliseconds
 	 * @return
 	 */
-	public ArrayList<PlaceArmiesMove> getPlaceArmiesMoves(BotState state, Long timeOut);
+	public ArrayList<PlaceArmiesMove> getPlaceArmiesMoves(BotState state, Long timeoutMillis);
 	
 	/**
 	 * MOVE ARMIES - attack opponents' regions or neutral ones ... or transfer armies between your regions.
 	 * @param state
-	 * @param timeOut
+	 * @param timeoutMillis in milliseconds
 	 * @return
 	 */
-	public ArrayList<AttackTransferMove> getAttackTransferMoves(BotState state, Long timeOut);
+	public ArrayList<AttackTransferMove> getAttackTransferMoves(BotState state, Long timeoutMillis);
 
 	/**
 	 * Callback that is invoked only for {@link InternalRobot}s and games with {@link GUI}.

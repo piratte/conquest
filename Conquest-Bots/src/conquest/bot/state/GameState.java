@@ -122,6 +122,19 @@ public class GameState {
 					  + "|NEU=" + (owned == null ? "N/A" : owned.get(Player.NEUTRAL))
 					  + "]";
 		}
+
+		/**
+		 * ME becomes OPPONENT and vice versa, OPPONENT becomes ME.
+		 */
+		protected void swapPlayer() {
+			owner = Player.swapPlayer(owner);
+			
+			int newOppOwned = owned.get(Player.ME);
+			int newMeOwned = owned.get(Player.OPPONENT);
+			
+			owned.put(Player.OPPONENT, newOppOwned);
+			owned.put(Player.ME, newMeOwned);
+		}
 		
 	}
 	
@@ -130,7 +143,7 @@ public class GameState {
 		/**
 		 * What player this object describes.
 		 */
-		public final Player player;
+		public Player player;
 		
 		/**
 		 * What {@link Region} {@link #player} owns.
@@ -532,6 +545,27 @@ public class GameState {
 			continent.owned.inc(defender.player);			
 			updateContinentOwnership(continent);
 		}		
+	}
+	
+	/**
+	 * ME becomes OPPONENT and vice versa, OPPONENT becomes ME.
+	 */
+	public void swapPlayers() {
+		PlayerState newMe = opp;
+		newMe.player = Player.swapPlayer(newMe.player);
+		
+		PlayerState newOpp = me;
+		newOpp.player = Player.swapPlayer(newOpp.player);;
+		
+		this.me = newMe;
+		this.opp = newOpp;
+		
+		players[Player.ME.id] = newMe;
+		players[Player.OPPONENT.id] = newOpp;
+		
+		for (ContinentState continent : continents) {
+			continent.swapPlayer();			
+		}
 	}
 	
 	@Override
