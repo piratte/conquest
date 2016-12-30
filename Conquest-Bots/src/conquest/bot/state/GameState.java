@@ -443,7 +443,12 @@ public class GameState {
 			newOwnerState.continents.put(continentState.continent, continentState);
 			
 			if (oldOwnerState.player != Player.NEUTRAL) oldOwnerState.placeArmies -= continentState.continent.reward;
-			if (newOwnerState.player != Player.NEUTRAL) newOwnerState.placeArmies += continentState.continent.reward;
+			if (newOwnerState.player != Player.NEUTRAL) newOwnerState.placeArmies += continentState.continent.reward;					
+			
+			continentState.owned.dec(oldOwnerState.player);
+			continentState.owned.inc(newOwnerState.player);
+			
+			continentState.owner = newOwnerState.player;
 		}
 	}
 	
