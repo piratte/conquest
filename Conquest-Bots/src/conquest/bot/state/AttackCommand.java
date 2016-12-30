@@ -1,7 +1,5 @@
 package conquest.bot.state;
 
-import conquest.bot.state.GameState.ContinentState;
-import conquest.bot.state.GameState.RegionState;
 import conquest.game.Player;
 import conquest.game.world.Region;
 
@@ -43,52 +41,15 @@ public class AttackCommand implements Cloneable {
 	 * @param state
 	 */
 	public void apply(GameState state) {
-		RegionState regionFrom = state.region(from);
-		RegionState regionTo = state.region(to);
-		
-		if (regionFrom.owner.player == regionTo.owner.player) {
-			// MOVE INSTEAD!
-			new MoveCommand(from, to, armies).apply(state);
-			return;
-		}
-		
-		if (regionFrom.armies <= armies) armies = regionFrom.armies-1;
-		
-		if (armies < 1) return;
-		
-		if (attackersCasaulties < 0)               attackersCasaulties = 0;
-		if (defendersCasaulties < 0)               defendersCasaulties = 0;
-		if (attackersCasaulties > armies)          attackersCasaulties = armies;
-		if (defendersCasaulties > regionTo.armies) defendersCasaulties = regionTo.armies;
-		
-		if (defendersCasaulties < regionTo.armies) {
-			// defenders won
-			regionFrom.armies -= attackersCasaulties;
-			regionTo.armies -= defendersCasaulties;
-		} else
-		if (defendersCasaulties >= regionTo.armies && armies == attackersCasaulties) {
-			// defenders are granted 1 army
-			regionFrom.armies -= armies;
-			regionTo.armies = 1;
-		} else {
-			// attackers won
-			regionFrom.armies -= armies;
-			regionTo.armies = armies - attackersCasaulties;
-			
-			// change ownership
-			regionTo.owner = state.player(fromOwner);
-			
-			
-			ContinentState continent = state.continent(to.continent); 
-			continent.owned.inc(fromOwner);
-			continent.owned.dec(toOwner);
-			
-			if (continent.owned.get(toOwner) == to.continent.getRegions().size()) {
-				continent.owner = fromOwner;
-			} else {
-				continent.owner = Player.NEUTRAL;
-			}
-		}
+		state.apply(this);		
+	}
+	
+	/**
+	 * Be sure to have {@link #attackersCasaulties} and {@link #defendersCasaulties} defined before reverting!
+	 * @param state
+	 */
+	public void revert(GameState state) {
+		state.revert(this);
 	}
 		
 }

@@ -1,6 +1,5 @@
 package conquest.bot.state;
 
-import conquest.bot.state.GameState.RegionState;
 import conquest.game.world.Region;
 
 public class PlaceCommand {
@@ -18,8 +17,15 @@ public class PlaceCommand {
 	 * @param state
 	 */
 	public void apply(GameState state) {
-		RegionState regionState = state.region(region);
-		regionState.armies += armies;
+		state.apply(this);
+	}
+	
+	/**
+	 * Revert this action in {@link GameState}.
+	 * @param state
+	 */
+	public void revert(GameState state) {
+		state.revert(this);;
 	}
 	
 }

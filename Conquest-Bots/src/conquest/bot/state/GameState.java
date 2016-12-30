@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import conquest.bot.BotState;
+import conquest.bot.state.GameState.RegionState;
 import conquest.bot.state.compact.GameStateCompact;
 import conquest.game.Player;
 import conquest.game.RegionData;
@@ -420,6 +421,10 @@ public class GameState {
 
 	}
 	
+	protected void updateContinentOwnership(Continent continent) {
+		updateContinentOwnership(continent(continent));
+	}
+	
 	protected void updateContinentOwnership(ContinentState continentState) {
 		Player newOwner = Player.NEUTRAL;
 		for (Player player : Player.values()) {
@@ -457,7 +462,7 @@ public class GameState {
 	public PlayerState player(Player player) {
 		return players[player.id];
 	}
-	
+		
 	public void apply(PlaceCommand cmd) {
 		RegionState region = region(cmd.region); 
 		region.armies += cmd.armies;
@@ -493,29 +498,43 @@ public class GameState {
 	}
 	
 	public void apply(AttackCommand cmd) {		
-		RegionState from = region(cmd.from);
-		RegionState to   = region(cmd.to);
+		RegionState regionFrom = region(cmd.from);
+		RegionState regionTo = region(cmd.to);
 		
-		PlayerState attacker = from.owner;
-		PlayerState defender = to.owner;
-		
-		from.armies -= cmd.armies;		
-		to.armies   += cmd.armies - cmd.attackersCasaulties - cmd.defendersCasaulties;
-		
-		attacker.totalArmies -= cmd.attackersCasaulties;
-		defender.totalArmies -= cmd.defendersCasaulties;
-		
-		if (cmd.attackersCasaulties < cmd.armies && to.armies <= cmd.defendersCasaulties) {
-			to.owner = attacker;
-			
-			attacker.regions.put(to.region, to);
-			defender.regions.remove(to.region);
-			
-			ContinentState continent = continent(to.region.continent);
-			continent.owned.inc(attacker.player);
-			continent.owned.dec(defender.player);			
-			updateContinentOwnership(continent);
+		if (regionFrom.owner.player == regionTo.owner.player) {
+			// MOVE INSTEAD!
+			apply(new MoveCommand(cmd.from, cmd.to, cmd.armies));
+			return;
 		}
+		
+		if (regionFrom.armies <= cmd.armies) cmd.armies = regionFrom.armies-1;
+		
+		if (cmd.armies < 1) return;
+		
+		if (cmd.attackersCasaulties < 0)               cmd.attackersCasaulties = 0;
+		if (cmd.defendersCasaulties < 0)               cmd.defendersCasaulties = 0;
+		if (cmd.attackersCasaulties > cmd.armies)      cmd.attackersCasaulties = cmd.armies;
+		if (cmd.defendersCasaulties > regionTo.armies) cmd.defendersCasaulties = regionTo.armies;
+		
+		if (cmd.defendersCasaulties < regionTo.armies) {
+			// defenders won
+			regionFrom.armies -= cmd.attackersCasaulties;
+			regionTo.armies -= cmd.defendersCasaulties;
+		} else
+		if (cmd.defendersCasaulties >= regionTo.armies && cmd.armies == cmd.attackersCasaulties) {
+			// defenders are granted 1 army
+			regionFrom.armies -= cmd.armies;
+			regionTo.armies = 1;
+		} else {
+			// attackers won
+			regionFrom.armies -= cmd.armies;
+			regionTo.armies = cmd.armies - cmd.attackersCasaulties;
+			
+			// change ownership
+			regionTo.owner = player(cmd.fromOwner);
+			updateContinentOwnership(regionTo.region.continent);			
+		}
+		
 	}
 	
 	public void revert(AttackCommand cmd) {		
