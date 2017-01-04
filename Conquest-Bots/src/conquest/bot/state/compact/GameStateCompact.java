@@ -177,7 +177,7 @@ public class GameStateCompact implements Cloneable {
 	 */
 	public void setArmies(Region region, int armies) {
 		int ownerPlayerFlag = regions[region.id] & SOME_PLAYER_FLAG;
-		regions[region.id] = armies << Player.LAST_ID | ownerPlayerFlag;
+		regions[region.id] = (armies << Player.LAST_ID) | ownerPlayerFlag;
 	}
 	
 	/**
@@ -208,8 +208,8 @@ public class GameStateCompact implements Cloneable {
 	
 	public GameStateCompact clone() {
 		GameStateCompact result = new GameStateCompact();
-		result.regions = new int[Region.LAST_ID];
-		result.continents = new int[Continent.LAST_ID];
+		result.regions = new int[Region.LAST_ID+1];
+		result.continents = new int[Continent.LAST_ID+1];
 		System.arraycopy(regions, 0, result.regions, 0, regions.length);
 		System.arraycopy(continents, 0, result.continents, 0, continents.length);		
 		return result;
@@ -223,16 +223,16 @@ public class GameStateCompact implements Cloneable {
 		
 		GameStateCompact result = new GameStateCompact();
 		
-		result.regions = new int[Region.LAST_ID];
+		result.regions = new int[Region.LAST_ID+1];
 		
 		for (RegionState region : state.regions) {
 			int regionCompact = region.armies;
-			regionCompact <<= Continent.LAST_ID;
+			regionCompact <<= Player.LAST_ID;
 			regionCompact |= region.owner.player.playerFlag;
 			result.regions[region.region.id] = regionCompact;
 		}
 		
-		result.continents = new int[Continent.LAST_ID];
+		result.continents = new int[Continent.LAST_ID+1];
 		
 		for (ContinentState continent : state.continents) {
 			int continentCompact = continent.owner.playerFlag;
