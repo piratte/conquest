@@ -536,8 +536,10 @@ public class GameState {
 			regionTo.armies = cmd.armies - cmd.attackersCasaulties;
 			
 			// change ownership
+			player(cmd.fromOwner).regions.put(cmd.to, regionTo);
+			player(cmd.toOwner).regions.remove(cmd.to);
 			regionTo.owner = player(cmd.fromOwner);
-			updateContinentOwnership(regionTo.region.continent);			
+			updateContinentOwnership(regionTo.region.continent);		
 		}
 		
 	}

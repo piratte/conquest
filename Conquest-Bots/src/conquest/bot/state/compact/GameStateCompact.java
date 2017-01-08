@@ -196,9 +196,7 @@ public class GameStateCompact implements Cloneable {
 	 * @param player
 	 */
 	public void setOwner(Region region, Player player) {
-		regions[region.id] >>= Player.LAST_ID;
-		regions[region.id] <<= Player.LAST_ID;
-		regions[region.id] |= player.playerFlag;
+		regions[region.id] &= Player.NULL_PLAYER_FLAG | player.playerFlag;
 		continents[region.continent.id] = -1;
 	}
 	
