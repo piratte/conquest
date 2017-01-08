@@ -4,6 +4,7 @@ import java.io.File;
 
 import conquest.bot.Bot;
 import conquest.bot.BotParser;
+import conquest.bot.FileBotLog;
 
 /**
  * This runs JAVA FQCN bot as external bot.
@@ -33,7 +34,9 @@ public class JavaBot {
 	
 	public void run() {
 		BotParser parser = new BotParser(constructBot());
-		if (logFile != null) parser.setLogFile(logFile);
+		if (logFile != null) {
+			FileBotLog log = parser.setLogFile(logFile);
+		}
 		parser.start();
 		
 		try {

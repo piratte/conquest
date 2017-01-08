@@ -30,6 +30,8 @@ public class ProcessRobot implements Robot
 	private Object mutex = new Object();
 	
 	private Process child;
+	private File childDir;
+	private String childCommand;
 	
 	private IORobot robot;
 
@@ -42,7 +44,9 @@ public class ProcessRobot implements Robot
 	
 	public ProcessRobot(String playerName, String dir, String command) throws IOException
 	{		
-		child = Runtime.getRuntime().exec(command, null, new File(dir));
+		childCommand = command;
+		childDir = new File(dir);
+		child = Runtime.getRuntime().exec(childCommand, null, childDir);
 		System.out.println(playerName + " -> " + command);
 		robot = new IORobot(playerName, child.getOutputStream(), false, child.getInputStream(), child.getErrorStream());
 	}
@@ -61,18 +65,27 @@ public class ProcessRobot implements Robot
 	@Override
 	public String getPreferredStartingArmies(long timeOut, ArrayList<RegionData> pickableRegions)
 	{
+		if (!isRunning()) {
+			throw new RuntimeException("Bot died out. Executed from '" + childDir.getAbsolutePath() + "' with command '" + childCommand + "'.");
+		}
 		return robot.getPreferredStartingArmies(timeOut, pickableRegions);
 	}
 	
 	@Override
 	public String getPlaceArmiesMoves(long timeOut)
 	{
+		if (!isRunning()) {
+			throw new RuntimeException("Bot died out. Executed from '" + childDir.getAbsolutePath() + "' with command '" + childCommand + "'.");
+		}
 		return robot.getPlaceArmiesMoves(timeOut);
 	}
 	
 	@Override
 	public String getAttackTransferMoves(long timeOut)
 	{
+		if (!isRunning()) {
+			throw new RuntimeException("Bot died out. Executed from '" + childDir.getAbsolutePath() + "' with command '" + childCommand + "'.");
+		}
 		return robot.getAttackTransferMoves(timeOut);
 	}
 		
@@ -82,6 +95,7 @@ public class ProcessRobot implements Robot
 	}
 	
 	public boolean isRunning() {
+		if (robot == null) return false;
 		if (!robot.isRunning()) {
 			if (child == null) return false;
 			synchronized(mutex) {

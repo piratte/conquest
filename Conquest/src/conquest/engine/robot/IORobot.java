@@ -141,6 +141,7 @@ public class IORobot implements Robot
 
 	@Override
 	public String getRobotName() {
+		if (config == null) return "N/A";
 		return config.playerName;
 	}
 	

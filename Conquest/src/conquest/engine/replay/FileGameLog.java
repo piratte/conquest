@@ -58,6 +58,7 @@ public class FileGameLog extends GameLog {
 			writer.println(line.asString());
 		}
 		
+		writer.flush();
 		writer.close();
 		
 		buffer.clear();
@@ -75,6 +76,7 @@ public class FileGameLog extends GameLog {
 			throw new RuntimeException("Failed to log the game into: " + file.getAbsolutePath(), e);
 		}
 		
+		writer.flush();
 		writer.println(config.asString());
 		
 		writer.close();
@@ -98,6 +100,7 @@ public class FileGameLog extends GameLog {
 		
 		writer.println(result.getHumanString());
 		
+		writer.flush();
 		writer.close();
 	}
 

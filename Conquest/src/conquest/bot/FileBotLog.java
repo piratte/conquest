@@ -27,6 +27,7 @@ public class FileBotLog {
 	
 	public synchronized void log(String msg) {
 		PrintWriter writer;
+		
 		try {
 			if (file.exists()) {
 				writer = new PrintWriter(new FileOutputStream(file, true));
@@ -34,10 +35,11 @@ public class FileBotLog {
 				writer = new PrintWriter(new FileOutputStream(file));
 			}
 		} catch (FileNotFoundException e) {
-			throw new RuntimeException("Failed to log the game into: " + file.getAbsolutePath(), e);
+			throw new RuntimeException("Failed to log the bot into: " + file.getAbsolutePath(), e);
 		}
 		
 		writer.println(msg);
+		writer.flush();
 		
 		writer.close();
 	}

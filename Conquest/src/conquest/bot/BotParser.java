@@ -46,9 +46,11 @@ public class BotParser extends Thread {
 		this(bot, System.in, System.out);
 	}
 	
-	public void setLogFile(File file) {
+	public FileBotLog setLogFile(File file) {
 		log = new FileBotLog(file);
 		log.start();
+		log("Logging started...");
+		return log;
 	}
 	
 	public BotParser(Bot bot, InputStream input, PrintStream output)
