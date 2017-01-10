@@ -8,7 +8,7 @@ public enum Player {
 	
 	public static final int LAST_ID = 3;
 	
-	public static final int NULL_PLAYER_FLAG = Integer.MAX_VALUE ^ 8;
+	public static final int NULL_PLAYER_FLAG = Integer.MAX_VALUE << 3;
 	
 	/**
 	 * Must be 1-based!
