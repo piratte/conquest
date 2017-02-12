@@ -167,7 +167,7 @@ public class SmartBot extends GameBot
 		for (RegionState reg : o1.neighbours) {
 			enemies += (reg.owned(Player.OPPONENT) ? reg.armies : 0);
 			result += (reg.owned(Player.NEUTRAL) ? 1 : 0) * 5000;
-			result += (reg.owned(Player.OPPONENT) ? 1 : 0) * (2000 + 4000/reg.armies);
+			result += (reg.owned(Player.OPPONENT) ? 1 : 0) * (2000 + 4000/ (reg.armies > 0 ? reg.armies : 1));
 		}
 		
 		float intermediate = result;
@@ -175,7 +175,7 @@ public class SmartBot extends GameBot
 		//SET REGION PRIORITY:
 
 		//BASED ON THE DIFFERENCE IN STRENGTH WITH THE OPPONENT
-		float strengthPriority = (enemies>0? (enemies/(float)(0.7*(o1.armies))) : 1);
+		float strengthPriority = (enemies>0? (enemies/(float)(0.7*(o1.armies > 0 ? o1.armies : 1))) : 1);
 		
 		//BASED ON THE CONTINENT EASIER TO FINISH
 		Continent c1 = o1.region.continent;
@@ -221,7 +221,7 @@ public class SmartBot extends GameBot
 	// =============
 
 	@Override
-	public List<MoveCommand> moveArmies(long timeout) {
+	public List<MoveCommand> moveArmies(long timeout) {		
 		List<MoveCommand> result = new ArrayList<MoveCommand>();
 		
 		// CAPTURE REGIONS
@@ -263,6 +263,7 @@ public class SmartBot extends GameBot
 					neighbours.remove(i);
 				}
 			}
+			if (totalPriority < 0.0001) totalPriority = 0.0001f;
 			
 			for (RegionState to : neighbours) {
 				

@@ -56,6 +56,12 @@ public class GameState {
 		public String toString() {
 			return (region == null ? "RegionState" : region.name()) + "[" + (owner == null ? "null" : owner.player.name()) + "|" + armies + "]";
 		}
+
+		/*
+		public void swapPlayer() {
+			// NOTHING TO DO...
+		}
+		*/
 		
 	}
 		
@@ -131,7 +137,7 @@ public class GameState {
 			owner = Player.swapPlayer(owner);
 			
 			int newOppOwned = owned.get(Player.ME);
-			int newMeOwned = owned.get(Player.OPPONENT);
+			int newMeOwned  = owned.get(Player.OPPONENT);
 			
 			owned.put(Player.OPPONENT, newOppOwned);
 			owned.put(Player.ME, newMeOwned);
@@ -218,12 +224,18 @@ public class GameState {
 	
 	/**
 	 * Region state can be found under index 'Region.id'.
+	 * 
+ 	 * Region indices are 1-based! [0] is null!
+	 * 
 	 * @return
 	 */
 	public RegionState[] regions;
 	
 	/**
 	 * Continent state can be found under index 'Continent.id'.
+	 * 
+	 * Continent indices are 1-based! [0] is null!
+	 * 
 	 * @return
 	 */
 	public ContinentState[] continents;
@@ -605,10 +617,10 @@ public class GameState {
 	 */
 	public void swapPlayers() {
 		PlayerState newMe = opp;
-		newMe.player = Player.swapPlayer(newMe.player);
-		
 		PlayerState newOpp = me;
-		newOpp.player = Player.swapPlayer(newOpp.player);;
+		
+		newMe.player  = Player.swapPlayer(newMe.player);
+		newOpp.player = Player.swapPlayer(newOpp.player);
 		
 		this.me = newMe;
 		this.opp = newOpp;
@@ -616,9 +628,14 @@ public class GameState {
 		players[Player.ME.id] = newMe;
 		players[Player.OPPONENT.id] = newOpp;
 		
-		for (ContinentState continent : continents) {
-			continent.swapPlayer();			
+		for (int i = 1; i < Continent.LAST_ID; ++i) {
+			continents[i].swapPlayer();			
 		}
+		/* NO NEED TO DO THAT, region only contains reference to PlayerState, which we have already swapPlayer() for.
+		for (int i = 1; i < Region.LAST_ID; ++i) {
+			regions[i].swapPlayer();			
+		}
+		*/
 	}
 	
 	@Override
