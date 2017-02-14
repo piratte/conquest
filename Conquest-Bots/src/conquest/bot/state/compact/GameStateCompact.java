@@ -222,8 +222,11 @@ public class GameStateCompact implements Cloneable {
 		GameStateCompact result = new GameStateCompact();
 		
 		result.regions = new int[Region.LAST_ID+1];
+		result.regions[0] = 0;
 		
-		for (RegionState region : state.regions) {
+		RegionState region;
+		for (int i = 1; i < state.regions.length; ++i) {
+			region = state.regions[i];
 			int regionCompact = region.armies;
 			regionCompact <<= Player.LAST_ID;
 			regionCompact |= region.owner.player.playerFlag;
@@ -231,8 +234,11 @@ public class GameStateCompact implements Cloneable {
 		}
 		
 		result.continents = new int[Continent.LAST_ID+1];
+		result.continents[0] = 0;
 		
-		for (ContinentState continent : state.continents) {
+		ContinentState continent;
+		for (int i = 1; i < state.continents.length; ++i) {
+			continent = state.continents[i];
 			int continentCompact = continent.owner.playerFlag;
 			result.continents[continent.continent.id] = continentCompact;
 		}

@@ -224,29 +224,24 @@ public class SmartBot extends GameBot
 	public List<MoveCommand> moveArmies(long timeout) {		
 		List<MoveCommand> result = new ArrayList<MoveCommand>();
 		
+		// APPLY PLACE COMMANDS
+		for (PlaceCommand comm : placeCommands){
+			state.region(comm.region).armies += comm.armies;
+		}
+		
 		// CAPTURE REGIONS
 		for (RegionState from : state.me.regions.values()) {
-			
-			for (PlaceCommand comm : placeCommands){
-				if (comm.region.id == from.region.id){
-					from.armies+=comm.armies;
-				}
-			}
-			
 			List<RegionState> neighbours = new ArrayList<RegionState>(Arrays.asList(from.neighbours));
 			
 			
 			// SORT THEM ACCORDING TO THEIR SCORE
 			Collections.sort(neighbours, new Comparator<RegionState>() {
-
 				@Override
 				public int compare(RegionState o1, RegionState o2) {
-					
 					int regionScore1 = getAttackRegionScore(o1);
 					int regionScore2 = getAttackRegionScore(o2);
 					return regionScore2 - regionScore1;
 				}
-
 			});
 			
 
@@ -268,19 +263,20 @@ public class SmartBot extends GameBot
 			for (RegionState to : neighbours) {
 				
 				// IF YOU HAVE ENOUGH ARMY TO WIN WITH 0.7
-				if (shouldAttack(from, to, 0.7)) {
-					
+				if (shouldAttack(from, to, 0.7)) {					
 					// => ATTACK
+					MoveCommand cmd;
 					if(enemies==1 || neighbours.size()==1){
-						result.add(attackWithCourage(from, to));
+						result.add(cmd = attackWithCourage(from, to));
+						from.armies -= cmd.armies;
 						break;
 					}else{
-						result.add(attack(from, to, 0.7));
-						from.armies-= getRequiredSoldiersToConquerRegion(from, to, 0.7);
-						
+						result.add(cmd = attack(from, to, 0.7));
+						from.armies -= cmd.armies;
 					}
 					enemies--;
-				}else if(enemies==1 || getAttackRegionScore(to)/totalPriority>(0.35+(Math.random()*0.05))){
+				} else 
+				if(enemies==1 || getAttackRegionScore(to)/totalPriority>(0.35+(Math.random()*0.05))){
 					break;
 				}
 			}
@@ -289,10 +285,22 @@ public class SmartBot extends GameBot
 		// MOVE LEFT OVERS CLOSER TO THE FRONT
 		for (RegionState from : state.me.regions.values()) {
 			if (hasOnlyMyNeighbours(from) && from.armies > 1) {
-				result.add(moveToFront(from));
+				MoveCommand cmd;
+				result.add(cmd = moveToFront(from));
+				from.armies -= cmd.armies;
 			}
 		}
 		
+		// REVERT STATE CHANGES
+		// => allow opponent modeling
+		for (PlaceCommand comm : placeCommands){
+			state.region(comm.region).armies -= comm.armies;
+		}
+		for (MoveCommand comm : result) {
+			state.region(comm.from).armies += comm.armies;
+		}
+		
+		// RETURN RESULT
 		return result;
 	}
 	
@@ -318,8 +326,7 @@ public class SmartBot extends GameBot
 		return Integer.MAX_VALUE;
 	}
 		
-	private boolean shouldAttack(RegionState from, RegionState to, double winProbability) {
-		
+	private boolean shouldAttack(RegionState from, RegionState to, double winProbability) {		
 		return from.armies > getRequiredSoldiersToConquerRegion(from, to, winProbability);
 	}
 	
