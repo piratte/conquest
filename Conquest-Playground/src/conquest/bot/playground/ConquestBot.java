@@ -1,11 +1,5 @@
 package conquest.bot.playground;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
 import conquest.bot.BotParser;
 import conquest.bot.custom.AggressiveBot;
 import conquest.bot.fight.FightSimulation;
@@ -15,7 +9,6 @@ import conquest.bot.map.RegionBFS;
 import conquest.bot.map.RegionBFS.BFSNode;
 import conquest.bot.map.RegionBFS.BFSVisitResult;
 import conquest.bot.map.RegionBFS.BFSVisitResultType;
-import conquest.bot.map.RegionBFS.BFSVisitor;
 import conquest.bot.state.ChooseCommand;
 import conquest.bot.state.GameBot;
 import conquest.bot.state.GameState.RegionState;
@@ -30,21 +23,24 @@ import conquest.game.world.Continent;
 import conquest.game.world.Region;
 import conquest.view.GUI;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Copy-paste of {@link AggressiveBot}. Feel free to fool around!
  * And be sure to check {@link FightSimulation} that provides fight-victory-probabilities for this bot.
  */
-public class ConquestBot extends GameBot 
+public class ConquestBot extends GameBot
 {
 	
 	FightAttackersResults aRes;
 	FightDefendersResults dRes;
 	
 	public ConquestBot() {
-		// TODO: run {@link FightSimulation} first! 
-		aRes = FightAttackersResults.loadFromFile(new File("FightSimulation-Attackers-A200-D200.obj"));
-		dRes = FightDefendersResults.loadFromFile(new File("FightSimulation-Defenders-A200-D200.obj"));
-		System.err.println("---==[ AGGRESSIVE BOT INITIALIZED ]==---");
+		aRes = FightAttackersResults.loadFromFile(new File("Conquest-Playground/FightSimulation-Attackers-A200-D200.obj"));
+		dRes = FightDefendersResults.loadFromFile(new File("Conquest-Playground/FightSimulation-Defenders-A200-D200.obj"));
+		System.err.println("---==[ BLABLA BOT INITIALIZED ]==---");
 	}
 	
 	@Override
@@ -60,20 +56,17 @@ public class ConquestBot extends GameBot
 		int m = 6;
 		
 		// SORT PICKABLE REGIONS ACCORDING TO THE PRIORITY
-		Collections.sort(choosable, new Comparator<Region>() {
-			@Override
-			public int compare(Region o1, Region o2) {
-				int priority1 = getPrefferedContinentPriority(o1.continent);
-				int priority2 = getPrefferedContinentPriority(o2.continent);				
-				return priority1 - priority2;
-			}
-		});
+		choosable.sort((o1, o2) -> {
+            int priority1 = getPrefferedContinentPriority(o1.continent);
+            int priority2 = getPrefferedContinentPriority(o2.continent);
+            return priority1 - priority2;
+        });
 		
 		// REMOVE CONTINENT WE DO NOT WANT
 		while (choosable.size() > m) choosable.remove(choosable.size()-1);
 		
 		// CREATE COMMANDS
-		List<ChooseCommand> result = new ArrayList<ChooseCommand>(choosable.size());
+		List<ChooseCommand> result = new ArrayList<>(choosable.size());
 		for (Region region : choosable) {
 			result.add(new ChooseCommand(region));
 		}
@@ -81,12 +74,12 @@ public class ConquestBot extends GameBot
 		return result;
 	}
 	
-	public int getPrefferedContinentPriority(Continent continent) {
+	private int getPrefferedContinentPriority(Continent continent) {
 		switch (continent) {
 		case Australia:     return 1;
 		case South_America: return 2;
 		case North_America: return 3;
-		case Europe:        return 4;		
+		case Europe:        return 4;
 		case Africa:        return 5;
 		case Asia:          return 6;
 		default:            return 7;
@@ -99,22 +92,18 @@ public class ConquestBot extends GameBot
 	
 	@Override
 	public List<PlaceCommand> placeArmies(long timeout) {
-		List<PlaceCommand> result = new ArrayList<PlaceCommand>();
+	    System.err.println("Place armies timeout: " + timeout);
+		List<PlaceCommand> result = new ArrayList<>();
 		
 		// CLONE REGIONS OWNED BY ME
-		List<RegionState> mine = new ArrayList<RegionState>(state.me.regions.values());
+		List<RegionState> mine = new ArrayList<>(state.me.regions.values());
 		
 		// SORT THEM ACCORDING TO THEIR SCORE
-		Collections.sort(mine, new Comparator<RegionState>() {
-
-			@Override
-			public int compare(RegionState o1, RegionState o2) {
-				int regionScore1 = getRegionScore(o1);
-				int regionScore2 = getRegionScore(o2);
-				return regionScore2 - regionScore1;
-			}
-
-		});
+		mine.sort((o1, o2) -> {
+            int regionScore1 = getRegionScore(o1);
+            int regionScore2 = getRegionScore(o2);
+            return regionScore2 - regionScore1;
+        });
 		
 		// DO NOT ADD SOLDIER TO REGIONS THAT HAS SCORE 0 (not perspective)
 		int i = 0;
@@ -153,7 +142,8 @@ public class ConquestBot extends GameBot
 
 	@Override
 	public List<MoveCommand> moveArmies(long timeout) {
-		List<MoveCommand> result = new ArrayList<MoveCommand>();
+        System.err.println("Move armies timeout: " + timeout);
+		List<MoveCommand> result = new ArrayList<>();
 		
 		// CAPTURE ALL REGIONS WE CAN
 		for (RegionState from : state.me.regions.values()) {
@@ -180,7 +170,7 @@ public class ConquestBot extends GameBot
 	}
 	
 	private boolean hasOnlyMyNeighbours(RegionState from) {
-		for (RegionState region : from.neighbours) {			
+		for (RegionState region : from.neighbours) {
 			if (!region.owned(Player.ME)) return false;
 		}
 		return true;
@@ -205,33 +195,26 @@ public class ConquestBot extends GameBot
 	}
 	
 	private MoveCommand attack(RegionState from, RegionState to, double winProbability) {
-		MoveCommand result = new MoveCommand(from.region, to.region, getRequiredSoldiersToConquerRegion(from, to, winProbability));
-		return result;
+        return new MoveCommand(from.region, to.region, getRequiredSoldiersToConquerRegion(from, to, winProbability));
 	}
 	
 	private MoveCommand transfer(RegionState from, RegionState to) {
-		MoveCommand result = new MoveCommand(from.region, to.region, from.armies-1);
-		return result;
+        return new MoveCommand(from.region, to.region, from.armies-1);
 	}
 	
 	private Region moveToFrontRegion;
 	
 	private MoveCommand moveToFront(RegionState from) {
-		RegionBFS<BFSNode> bfs = new RegionBFS<BFSNode>();
+		RegionBFS<BFSNode> bfs = new RegionBFS<>();
 		moveToFrontRegion = null;
-		bfs.run(from.region, new BFSVisitor<BFSNode>() {
-
-			@Override
-			public BFSVisitResult<BFSNode> visit(Region region, int level, BFSNode parent, BFSNode thisNode) {
-				//System.err.println((parent == null ? "START" : parent.level + ":" + parent.region) + " --> " + level + ":" + region);
-				if (!hasOnlyMyNeighbours(state.region(region))) {
-					moveToFrontRegion = region;
-					return new BFSVisitResult<BFSNode>(BFSVisitResultType.TERMINATE, thisNode == null ? new BFSNode() : thisNode);
-				}
-				return new BFSVisitResult<BFSNode>(thisNode == null ? new BFSNode() : thisNode);
-			}
-			
-		});
+		bfs.run(from.region, (region, level, parent, thisNode) -> {
+            //System.err.println((parent == null ? "START" : parent.level + ":" + parent.region) + " --> " + level + ":" + region);
+            if (!hasOnlyMyNeighbours(state.region(region))) {
+                moveToFrontRegion = region;
+                return new BFSVisitResult<>(BFSVisitResultType.TERMINATE, thisNode == null ? new BFSNode() : thisNode);
+            }
+            return new BFSVisitResult<>(thisNode == null ? new BFSNode() : thisNode);
+        });
 		
 		if (moveToFrontRegion != null) {
 			//List<Region> path = fw.getPath(from.getRegion(), moveToFrontRegion);
@@ -253,7 +236,8 @@ public class ConquestBot extends GameBot
 	}
 	
 	
-	public static void runInternal() {
+	@SuppressWarnings("WeakerAccess")
+    public static void runInternal() {
 		Config config = new Config();
 		
 		config.bot1Init = "internal:conquest.bot.playground.ConquestBot";
