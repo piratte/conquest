@@ -47,8 +47,8 @@ public class SmartBot extends GameBot
 	
 	
 	public SmartBot() {		
-		aRes = FightAttackersResults.loadFromFile(new File("FightSimulation-Attackers-A200-D200.obj"));
-		dRes = FightDefendersResults.loadFromFile(new File("FightSimulation-Defenders-A200-D200.obj"));
+		aRes = FightAttackersResults.loadFromFile(new File("Conquest-Playground/FightSimulation-Attackers-A200-D200.obj"));
+		dRes = FightDefendersResults.loadFromFile(new File("Conquest-Playground/FightSimulation-Defenders-A200-D200.obj"));
 		System.err.println("---==[ SMART BOT INITIALIZED ]==---");
 	}
 	

@@ -12,6 +12,7 @@ import conquest.bot.map.RegionBFS.BFSVisitResult;
 import conquest.bot.map.RegionBFS.BFSVisitResultType;
 import conquest.bot.state.*;
 import conquest.bot.state.GameState.RegionState;
+import conquest.bot.state.compact.GameStateCompact;
 import conquest.engine.Engine.FightMode;
 import conquest.engine.RunGame;
 import conquest.engine.RunGame.Config;
@@ -24,6 +25,7 @@ import conquest.view.GUI;
 import java.io.File;
 import java.util.*;
 
+
 import static java.util.Collections.*;
 
 /**
@@ -32,15 +34,16 @@ import static java.util.Collections.*;
  */
 public class ConquestBot extends GameBot
 {
-	
-	private FightAttackersResults aRes;
+    private static final int DEPTH_LIMIT = 4;
+    private FightAttackersResults aRes;
 	private FightDefendersResults dRes;
 
 	private SmartBot smartBot = new SmartBot();
 	
 	public ConquestBot() {
-		aRes = FightAttackersResults.loadFromFile(new File("Conquest-Playground/FightSimulation-Attackers-A200-D200.obj"));
-		dRes = FightDefendersResults.loadFromFile(new File("Conquest-Playground/FightSimulation-Defenders-A200-D200.obj"));
+        System.err.println("---==[ BLABLA BOT INITIALIZING ]==---");
+        aRes = FightAttackersResults.loadFromFile(new File("Conquest-Playground/FightSimulation-Attackers-A200-D200.obj"));
+        dRes = FightDefendersResults.loadFromFile(new File("Conquest-Playground/FightSimulation-Defenders-A200-D200.obj"));
 		System.err.println("---==[ BLABLA BOT INITIALIZED ]==---");
 	}
 	
@@ -95,9 +98,9 @@ public class ConquestBot extends GameBot
 	public List<PlaceCommand> placeArmies(long timeout) {
         List<List<PlaceCommand>> options = getAllPlacementOpts(state, getInterestingRegions(state, 3));
         List<PlaceCommand> bestCommands = null;
-        int bestScore = Integer.MIN_VALUE;
+        double bestScore = Integer.MIN_VALUE;
         for (List<PlaceCommand> commands : options) {
-            int score = evaluatePlaceCommands(state, commands);
+            double score = evaluatePlaceCommands(new GameState(GameStateCompact.fromGameState(state)), 0, commands);
             if (score > bestScore) {
                 bestScore = score;
                 bestCommands = commands;
@@ -122,14 +125,14 @@ public class ConquestBot extends GameBot
             };
     }
 
-    private int computeBestArmiesPlacement(GameState state) {
+    private double computeBestArmiesPlacement(GameState state, int depth) {
         // explore all the various placement options: all to one; all equally; two equally ==> 7 options
         List<List<PlaceCommand>> options = getAllPlacementOpts(state, getInterestingRegions(state, 3));
 
         //List<PlaceCommand> bestCommands = null;
-        int bestScore = Integer.MIN_VALUE;
+        double bestScore = Integer.MIN_VALUE;
         for (List<PlaceCommand> commands : options) {
-            int score = evaluatePlaceCommands(state, commands);
+            double score = evaluatePlaceCommands(state, depth, commands);
             if (score > bestScore) {
                 bestScore = score;
                 //bestCommands = commands;
@@ -150,9 +153,9 @@ public class ConquestBot extends GameBot
     private List<List<PlaceCommand>> getAllPlacementOpts(GameState state, List<RegionState> bestRegions) {
         List<List<PlaceCommand>> options = new ArrayList<>(7);
         options.addAll(createAllArmsToOneRegCommands(bestRegions,state));
-        options.add(createUniformAmrsCommands(bestRegions,state));
+        options.add(createUniformAmrsCommands(state, bestRegions));
         if (bestRegions.size()>2) {
-            options.addAll(createAllArmsToSubsetRegCommands(bestRegions,state));
+            options.addAll(createAllArmsToSubsetRegCommands(state, bestRegions));
         }
         return options;
     }
@@ -168,22 +171,25 @@ public class ConquestBot extends GameBot
         return bestRegions;
     }
 
-    private int evaluatePlaceCommands(GameState state, List<PlaceCommand> placeCommands) {
-        /* for (PlaceCommand cmd : placeCommands) {
+    private double evaluatePlaceCommands(final GameState state, int depth, List<PlaceCommand> placeCommands) {
+	    // applying place commands here, since there's no relevance in their order and we need to know their effect
+        // so we can move the newly placed armies
+
+        for (PlaceCommand cmd : placeCommands) {
             state.apply(cmd);
-        }*/
+        }
 
         // evaluate
-        int result = computeBestArmiesMovement(state, placeCommands);
+        double result = computeBestArmiesMovement(state, depth);
 
-        /*for (PlaceCommand cmd : placeCommands) {
+        for (PlaceCommand cmd : placeCommands) {
             state.revert(cmd);
-        }*/
+        }
 
         return result;
     }
 
-    private List<List<PlaceCommand>> createAllArmsToSubsetRegCommands(List<RegionState> bestRegions, GameState state) {
+    private List<List<PlaceCommand>> createAllArmsToSubsetRegCommands(final GameState state, List<RegionState> bestRegions) {
 	    List<List<PlaceCommand>> result = new ArrayList<>(3);
 
         for (int ignoreIndex = 0; ignoreIndex <bestRegions.size(); ignoreIndex++) {
@@ -204,7 +210,7 @@ public class ConquestBot extends GameBot
         return result;
     }
 
-    private List<PlaceCommand> createUniformAmrsCommands(List<RegionState> bestRegions, GameState state) {
+    private List<PlaceCommand> createUniformAmrsCommands(final GameState state, List<RegionState> bestRegions) {
         List<PlaceCommand> result = new ArrayList<>();
         int armiesLeft = state.me.placeArmies;
         int index = 0;
@@ -222,10 +228,11 @@ public class ConquestBot extends GameBot
         for (RegionState bestRegion : bestRegions) {
             int armiesLeft = state.me.placeArmies;
             List<PlaceCommand> commands = new ArrayList<>(armiesLeft / 3 + 1);
-            while (armiesLeft > 0) {
+            while (armiesLeft >= 3) {
                 commands.add(new PlaceCommand(bestRegion.region, 3));
                 armiesLeft -= 3;
             }
+            commands.add(new PlaceCommand(bestRegion.region, armiesLeft));
             result.add(commands);
         }
         return result;
@@ -266,44 +273,18 @@ public class ConquestBot extends GameBot
         }
 
         List<MoveCommand> bestCommands = null;
-        int bestScore = Integer.MIN_VALUE;
+        double bestScore = Integer.MIN_VALUE;
         for (List<MoveCommand> commands : options) {
-            int score = evaluateMoveCommands(state, EMPTY_LIST, commands);
+            double score = evaluateMoveCommands(new GameState(GameStateCompact.fromGameState(state)), 0, commands);
             if (score > bestScore) {
                 bestScore = score;
                 bestCommands = commands;
             }
         }
         return bestCommands;
-        /*
-		List<MoveCommand> result = new ArrayList<>();
-		
-		// CAPTURE ALL REGIONS WE CAN
-		for (RegionState from : state.me.regions.values()) {
-			for (RegionState to : from.neighbours) {
-				// DO NOT ATTACK OWN REGIONS
-				if (to.owned(Player.ME)) continue;
-				
-				// IF YOU HAVE ENOUGH ARMY TO WIN WITH 70%
-				if (shouldAttack(from, to, 0.7)) {
-					// => ATTACK
-					result.add(attack(from, to, 0.7));
-				}
-			}
-		}
-		
-		// MOVE LEFT OVERS CLOSER TO THE FRONT
-		for (RegionState from : state.me.regions.values()) {
-			if (hasOnlyMyNeighbours(from) && from.armies > 1) {
-				result.add(moveToFront(from));
-			}
-		}
-		
-		return result;
-		*/
 	}
 
-    private int computeBestArmiesMovement(GameState state, List<PlaceCommand> placeCommands) {
+    private double computeBestArmiesMovement(final GameState state, int depth) {
         List<RegionState> hotRegions = getInterestingRegions(state, 5);
 
         List<List<MoveCommand>> options = generateMoveOptions(hotRegions);
@@ -319,9 +300,9 @@ public class ConquestBot extends GameBot
 
         // return the best score achievable
         //List<MoveCommand> bestCommands = null;
-        int bestScore = Integer.MIN_VALUE;
+        double bestScore = Integer.MIN_VALUE;
         for (List<MoveCommand> commands : options) {
-            int score = evaluateMoveCommands(state, placeCommands,commands);
+            double score = evaluateMoveCommands(state, depth, commands);
             if (score > bestScore) {
                 bestScore = score;
                 //bestCommands = commands;
@@ -338,6 +319,7 @@ public class ConquestBot extends GameBot
             List<RegionState> neighbours = new ArrayList<>(myRegion.neighbours.length);
             List<List<MoveCommand>> regionOptions = new ArrayList<>(myRegion.neighbours.length*2);
             final int availableArmies = myRegion.armies - 1;
+            if (availableArmies == 0) continue;
             for (RegionState to : myRegion.neighbours) {
                 // DO NOT ATTACK OWN REGIONS
                 if (to.owned(Player.ME)) continue;
@@ -350,12 +332,15 @@ public class ConquestBot extends GameBot
             }
 
             // doubles
-            for (int regIndex = 0; regIndex < neighbours.size()-1; regIndex++) {
-                for (int restIndex = regIndex+1; restIndex < neighbours.size(); restIndex++) {
-                    regionOptions.add(Arrays.asList(
-                            new MoveCommand(myRegion.region, neighbours.get(regIndex).region, Math.round(availableArmies/2)),
-                            new MoveCommand(myRegion.region, neighbours.get(restIndex).region, Math.round(availableArmies/2))
-                    ));
+            int halfArmy = Math.floorDiv(availableArmies, 2);
+            if (halfArmy > 2) {
+                for (int regIndex = 0; regIndex < neighbours.size()-1; regIndex++) {
+                    for (int restIndex = regIndex+1; restIndex < neighbours.size(); restIndex++) {
+                        regionOptions.add(Arrays.asList(
+                                new MoveCommand(myRegion.region, neighbours.get(regIndex).region, halfArmy),
+                                new MoveCommand(myRegion.region, neighbours.get(restIndex).region, halfArmy)
+                        ));
+                    }
                 }
             }
             allRegionOptions.add(regionOptions);
@@ -378,78 +363,325 @@ public class ConquestBot extends GameBot
                 result.add(newCommand);
             }
         }
+        //System.err.println(String.format("Returning %d transfer commands", result.size()));
         return result;
     }
 
-    private void generatePermutations(List<List<List<MoveCommand>>> Lists, List<List<MoveCommand>> result, int depth, List<MoveCommand>current)
+    private void generatePermutations(List<List<List<MoveCommand>>> Lists, List<List<MoveCommand>> result, int depth, List<MoveCommand> current)
     {
+
         if(depth == Lists.size()) {
-            result.add(current);
+            result.add(new ArrayList<>(current));
             return;
         }
 
         for(int i = 0; i < Lists.get(depth).size(); ++i) {
             current.addAll(Lists.get(depth).get(i));
             generatePermutations(Lists, result, depth + 1, current);
+            current.removeAll(Lists.get(depth).get(i));
         }
     }
 
-    private int evaluateMoveCommands(GameState state, List<PlaceCommand> placeCommands, List<MoveCommand> moveCommands) {
-        /*for (MoveCommand cmd : moveCommands) {
-            state.apply(cmd);
-        }*/
-
-        // evaluate
-        int result = computeOpponentMove(state, placeCommands, moveCommands);
-
-        /*for (MoveCommand cmd : moveCommands) {
-            state.revert(cmd);
-        }*/
-
-        return result;
+    private double evaluateMoveCommands(final GameState state, int depth, List<MoveCommand> moveCommands) {
+        return computeOpponentMove(state, depth, moveCommands);
     }
 
-    private int computeOpponentMove(GameState state, List<PlaceCommand> placeCommands, List<MoveCommand> moveCommands) {
+    private double computeOpponentMove(final GameState state, int depth, List<MoveCommand> moveCommands) {
         // simulate opponent move
         final int IGNORED_TIMEOUT = 0;
-        smartBot.enforceState(state);
+        GameState stateForOpp = new GameState(GameStateCompact.fromGameState(state));
+        stateForOpp.swapPlayers();
+        smartBot.enforceState(stateForOpp);
         List<PlaceCommand> oponentPlace = smartBot.placeArmies(IGNORED_TIMEOUT);
         List<MoveCommand> oponentMove = smartBot.moveArmies(IGNORED_TIMEOUT);
 
         // simulate simulator computation
-        int result = runSimulator(state, placeCommands, moveCommands, oponentPlace, oponentMove);
+        return runSimulator(state, depth, moveCommands, oponentPlace, oponentMove);
+    }
+
+    private double runSimulator(GameState state, int depth, List<MoveCommand> moveCommands,
+                             List<PlaceCommand> oponentPlace, List<MoveCommand> oponentMove) {
+        Map<Region, List<MoveCommand>> destinationRegMap = new HashMap<>();
+        List<MoveCommand> toBeRemovedOpp = new ArrayList<>();
+        List<MoveCommand> toBeRemovedMe = new ArrayList<>();
+	    // check for clashing commands
+        for (MoveCommand myMove : moveCommands) {
+            // get commands where order matters
+            boolean myMoveClashes = false;
+            for (MoveCommand opoMove : oponentMove) {
+                if (state.region(myMove.to) == state.region(opoMove.to)) {
+                    myMoveClashes = true;
+                    if (!destinationRegMap.containsKey(myMove.to)) {
+                        destinationRegMap.put(myMove.to, new ArrayList<>());
+                        destinationRegMap.get(myMove.to).add(myMove);
+                    }
+                    destinationRegMap.get(myMove.to).add(opoMove);
+                    // remove clashing commands from their respective collections
+                    toBeRemovedOpp.add(opoMove);
+                }
+            }
+            if (myMoveClashes)
+                toBeRemovedMe.add(myMove);
+        }
+        moveCommands.removeAll(toBeRemovedMe);
+        toBeRemovedMe.clear();
+        oponentMove.removeAll(toBeRemovedOpp);
+        toBeRemovedOpp.clear();
+
+        ArrayList<Pair<BattleResult, BattleResult>> battleResults = new ArrayList<>((moveCommands.size() + oponentMove.size())*2);
+        for (MoveCommand myMove : moveCommands) {
+            // get commands that lead to battles on my side
+            if (!state.region(myMove.to).owned(Player.ME)) {
+                // create various attack command (= battle results)
+                battleResults.add(createBattleResults(state, myMove));
+                toBeRemovedMe.add(myMove);
+            }
+        }
+        moveCommands.removeAll(toBeRemovedMe);
+
+        // same for the opponent
+        for (MoveCommand opoMove : oponentMove) {
+            if (!state.region(opoMove.to).owned(Player.OPPONENT)) {
+                battleResults.add(createBattleResults(state, opoMove));
+                toBeRemovedOpp.add(opoMove);
+            }
+        }
+        oponentMove.removeAll(toBeRemovedOpp);
+
+        // get a pair of BattleResults for each region with clashing commands
+        for (Map.Entry<Region, List<MoveCommand>> regionWithCmds : destinationRegMap.entrySet()) {
+            battleResults.add(computeResultOfClashingCommands(state, regionWithCmds));
+        }
+
+        // apply non-clashing commands
+        for (PlaceCommand placeCmd : oponentPlace) state.apply(placeCmd);
+
+        double stateValue = 0;
+        for (int battleResCode = 0; battleResCode < Math.pow(2, battleResults.size()); battleResCode++) {
+            double probability = 1;
+            //System.err.println(moveCommands.size());
+            //System.err.println(oponentMove.size());
+            GameState curState = new GameState(GameStateCompact.fromGameState(state));
+            // applying all attack commands to project the battle results
+            for (int battleIndex = 0; battleIndex < battleResults.size(); battleIndex++) {
+                if (getNthBit(battleResCode, battleIndex)) {
+                    for (AttackCommand attCmd : battleResults.get(battleIndex).getFirst().getResultCommand()) {
+                        curState.apply(attCmd);
+                        probability *= battleResults.get(battleIndex).getFirst().getProbability();
+                    }
+                } else {
+                    for (AttackCommand attCmd : battleResults.get(battleIndex).getSecond().getResultCommand()) {
+                        curState.apply(attCmd);
+                        probability *= battleResults.get(battleIndex).getSecond().getProbability();
+                    }
+                }
+            }
+            if (depth > DEPTH_LIMIT) {
+                stateValue += probability * evaluateState(curState);
+            } else {
+                stateValue += probability * computeBestArmiesPlacement(curState, depth+1);
+            }
+
+            // revert applied commands
+            /*
+            for (int battleIndex = battleResults.size()-1; battleIndex >= 0; battleIndex--) {
+                if (getNthBit(battleResCode, battleIndex)) {
+                    for (AttackCommand attCmd : battleResults.get(battleIndex).getFirst().getResultCommand()) {
+                        state.revert(attCmd);
+                    }
+                } else {
+                    for (AttackCommand attCmd : battleResults.get(battleIndex).getSecond().getResultCommand()) {
+                        state.revert(attCmd);
+                    }
+                }
+            }*/
+        }
+
+        for (PlaceCommand placeCmd : oponentPlace) state.revert(placeCmd);
+
+        return stateValue;
+    }
+
+    private double evaluateState(GameState state) {
+	    final int CONTINENT_MULTIPLIER = 1000;
+        final int ARMY_MULTIPLIER = 10;
+	    int result = 0;
+
+	    for (GameState.ContinentState continent : state.player(Player.ME).continents.values()) {
+	        if (continent.ownedBy(Player.ME)) { // not sure if this if is necessary
+	            result += continent.continent.reward * CONTINENT_MULTIPLIER;
+            }
+        }
+
+        result += state.player(Player.ME).totalArmies * ARMY_MULTIPLIER;
 
         return result;
     }
 
-    private int runSimulator(GameState state,
-                             List<PlaceCommand> placeCommands, List<MoveCommand> moveCommands,
-                             List<PlaceCommand> oponentPlace, List<MoveCommand> oponentMove) {
-	    // TODO
-
-	    // check for clashing commands
-
-        // apply non-clashing commands
-
-        // branch on clashing commands
-
-        // branch on battles that could have two outcomes
-
-        // weight results for one outcome
-
-        // ADD END OF RECURSION
-
-        // revert applied commands
-
-        return 0;
+    private boolean getNthBit(int number, int bitNumber) {
+        return ((number >> bitNumber) & 1) == 1;
     }
 
-	private MoveCommand transfer(RegionState from, RegionState to) {
+    private Pair<BattleResult, BattleResult> computeResultOfClashingCommands(GameState state, Map.Entry<Region, List<MoveCommand>> regionWithCmds) {
+	    int meArmies = 0;
+	    int opoArmies = 0;
+
+	    for (MoveCommand cmd : regionWithCmds.getValue()) {
+	        if (getIssuer(state, cmd) == Player.ME) {
+	            meArmies += cmd.armies;
+            } else {
+	            opoArmies += cmd.armies;
+            }
+        }
+
+        // heuristic to incorporate destination region ownership
+        switch (state.region(regionWithCmds.getKey()).owner.player) {
+            case ME:
+                meArmies += state.region(regionWithCmds.getKey()).armies;
+                break;
+            case OPPONENT:
+                opoArmies += state.region(regionWithCmds.getKey()).armies;
+                break;
+            case NEUTRAL:
+                opoArmies = opoArmies > 2 ? opoArmies - 2 : 1;
+                meArmies  = meArmies > 2 ? meArmies - 2 : 1;
+                break;
+        }
+
+        // from here we will be pessimistic and assume that the opponent will be the defending
+        int meWinDeaths = (int) Math.round(aRes.getExpectedAttackersDeaths(meArmies, opoArmies));
+        if (meWinDeaths > meArmies) meWinDeaths = meArmies -1;
+        int defWinDeaths = 0;
+        try {
+            defWinDeaths = (int) Math.round(dRes.getExpectedDefendersDeaths(meArmies, opoArmies));
+        } catch (NullPointerException e) {
+            System.err.println(meArmies);
+            System.err.println(opoArmies);
+            System.exit(1);
+        }
+        if (defWinDeaths > opoArmies) defWinDeaths = opoArmies -1;
+
+        return new Pair<>(
+                new BattleResult(aRes.getAttackersWinChance(meArmies, opoArmies),
+                        createBattleScenario(state, regionWithCmds, meWinDeaths, Player.ME, Player.OPPONENT)),
+                new BattleResult(aRes.getDefendersWinChance(meArmies, opoArmies),
+                        createBattleScenario(state, regionWithCmds, defWinDeaths, Player.OPPONENT, Player.ME))
+        );
+    }
+
+    private List<AttackCommand> createBattleScenario(GameState state, Map.Entry<Region, List<MoveCommand>> regionWithCmds, int winnerDeaths, Player winner, Player looser) {
+        List<AttackCommand> result = new ArrayList<>(regionWithCmds.getValue().size());
+        boolean firstOpponentCmd = true;
+        for (MoveCommand cmd : regionWithCmds.getValue()) {
+            if (getIssuer(state, cmd) == winner) continue;
+            // prvnim tahem zmenime vlastnictvi pro oponenta bez ztrat
+            if (firstOpponentCmd) {
+                firstOpponentCmd = false;
+                result.add(new AttackCommand(
+                        cmd.from,
+                        looser,
+                        regionWithCmds.getKey(),
+                        state.region(regionWithCmds.getKey()).owner.player,
+                        cmd.armies,
+                        0,
+                        state.region(regionWithCmds.getKey()).armies
+
+                ));
+            } else {
+                // dale natahame vsechny jeho armady do regionu bez ztrat
+                result.add(new AttackCommand(
+                        cmd.from,
+                        looser,
+                        regionWithCmds.getKey(),
+                        looser,
+                        cmd.armies,
+                        0,0
+                ));
+            }
+        }
+
+        int mineDeathsSoFar = 0;
+        for (MoveCommand cmd : regionWithCmds.getValue()) {
+            if (getIssuer(state, cmd) == looser) continue;
+
+            // aplikuju vsechny moje commandy neuspesne, dokud se me ztraty nenaplni, posledni z nich s plnymi ztratami nepritele
+            if (mineDeathsSoFar < winnerDeaths) {
+                mineDeathsSoFar += cmd.armies;
+                int cmdDeaths = cmd.armies;
+                int defDeaths = 0;
+                if (mineDeathsSoFar > winnerDeaths) {
+                    cmdDeaths -= mineDeathsSoFar - winnerDeaths;
+                    defDeaths = state.region(regionWithCmds.getKey()).armies;
+                }
+                result.add(new AttackCommand(
+                        cmd.from,
+                        winner,
+                        regionWithCmds.getKey(),
+                        looser,
+                        cmd.armies,
+                        cmdDeaths,
+                        defDeaths
+                ));
+            } else {
+                // aplikuju vsechny me zbyvajici commandy bez mych ztrat
+                result.add(new AttackCommand(
+                        cmd.from,
+                        winner,
+                        regionWithCmds.getKey(),
+                        winner,
+                        cmd.armies,
+                        0,0
+                ));
+            }
+        }
+        return result;
+    }
+
+    private Player getIssuer(GameState state, MoveCommand cmd) {
+	    return state.region(cmd.from).owner.player;
+    }
+
+    private Pair<BattleResult, BattleResult> createBattleResults(GameState state, MoveCommand moveCmd) {
+        Region region = moveCmd.to;
+	    int defArms = state.region(region).armies;
+	    int attArms = moveCmd.armies;
+	    //System.err.println(String.format("defArms: %d ; attArms: %d", defArms, attArms));
+
+	    if (defArms < 1 || attArms < 1) {
+	        System.err.println("O def or att arms");
+        }
+
+	    // compute probability of winning and loosing
+        int attWinDeaths = (int) Math.round(aRes.getExpectedAttackersDeaths(attArms, defArms));
+        if (attWinDeaths > attArms) attWinDeaths = attArms -1;
+
+        int defWinDeaths = (int) Math.round(dRes.getExpectedDefendersDeaths(attArms, defArms));
+        if (defWinDeaths > defArms) defWinDeaths = defArms -1;
+
+        return new Pair<>(
+                new BattleResult(aRes.getAttackersWinChance(attArms, defArms),
+                        new AttackCommand(
+                                moveCmd.from, state.region(moveCmd.from).owner.player,
+                                moveCmd.to, state.region(moveCmd.to).owner.player,
+                                moveCmd.armies,
+                                attWinDeaths,
+                                state.region(moveCmd.to).armies)),
+                new BattleResult(aRes.getDefendersWinChance(attArms, defArms),
+                        new AttackCommand(
+                                moveCmd.from, state.region(moveCmd.from).owner.player,
+                                moveCmd.to, state.region(moveCmd.to).owner.player,
+                                moveCmd.armies,
+                                attArms,
+                                defWinDeaths
+                        )));
+    }
+
+    private MoveCommand transfer(RegionState from, RegionState to) {
         return new MoveCommand(from.region, to.region, from.armies-1);
 	}
-	
-	private Region moveToFrontRegion;
-	
+
+
+    private Region moveToFrontRegion;
 	private MoveCommand moveToFront(RegionState from, List<RegionState> front) {
 		RegionBFS<BFSNode> bfs = new RegionBFS<>();
 		moveToFrontRegion = null;
@@ -461,7 +693,7 @@ public class ConquestBot extends GameBot
             }
             return new BFSVisitResult<>(thisNode == null ? new BFSNode() : thisNode);
         });
-		
+
 		if (moveToFrontRegion != null) {
 			List<Region> path = bfs.getAllPaths(moveToFrontRegion).get(0);
 			Region moveTo = path.get(1);
@@ -477,14 +709,15 @@ public class ConquestBot extends GameBot
 		}
 		return null;
 	}
-	
+
 	
 	@SuppressWarnings("WeakerAccess")
     public static void runInternal() {
 		Config config = new Config();
-		
-		config.bot1Init = "internal:conquest.bot.playground.ConquestBot";
-		//config.bot1Init = "dir;process:../Conquest-Bots;java -cp ./bin;../Conquest/bin conquest.bot.external.JavaBot conquest.bot.playground.ConquestBot ./ConquestBot.log";
+		//config.bot1Init = "internal:conquest.bot.playground.ConquestBot";
+		config.bot1Init = "internal:" + ConquestBot.class.getCanonicalName();
+		System.err.println(config.bot1Init);
+        //config.bot1Init = "dir;process:../Conquest-Bots;java -cp ./bin;../Conquest/bin conquest.bot.external.JavaBot conquest.bot.playground.ConquestBot ./ConquestBot.log";
 		config.bot2Init = "internal:conquest.bot.BotStarter";
         //config.bot2Init = "internal:conquest.bot.custom.SmartBot";
 		//config.bot2Init = "human";

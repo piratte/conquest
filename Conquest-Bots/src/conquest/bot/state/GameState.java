@@ -484,12 +484,20 @@ public class GameState {
 		RegionState region = region(cmd.region); 
 		region.armies += cmd.armies;
 		region.owner.totalArmies += cmd.armies;
+
+		if (region.armies < 1) {
+		    System.err.println("Invalid place command apply");
+        }
 	}
 	
 	public void revert(PlaceCommand cmd) {
 		RegionState region = region(cmd.region);
 		region.armies -= cmd.armies;
 		region.owner.totalArmies -= cmd.armies;
+
+		if (region.armies < 1) {
+		    System.err.println("Invalid place command revert");
+        }
 	}
 	
 	public void apply(MoveCommand cmd) {
@@ -501,6 +509,10 @@ public class GameState {
 		
 		to.armies            += cmd.armies;
 		to.owner.totalArmies += cmd.armies;
+
+		if (to.armies < 1 || from.armies < 1) {
+		    System.err.println("Invalid move command");
+        }
 	}
 	
 	public void revert(MoveCommand cmd) {
@@ -512,6 +524,10 @@ public class GameState {
 		
 		to.armies            -= cmd.armies;
 		to.owner.totalArmies -= cmd.armies;
+
+        if (to.armies < 1 || from.armies < 1) {
+            System.err.println("Invalid move command");
+        }
 	}
 	
 	public void apply(AttackCommand cmd) {		
@@ -577,39 +593,46 @@ public class GameState {
 			continent.owned.inc(attacker.player);
 			continent.owned.dec(defender.player);			
 			updateContinentOwnership(continent);
-		}		
+		}
+		if (regionTo.armies < 1 || regionFrom.armies < 1) {
+		    System.err.println("Invalid attack command apply");
+        }
 	}
 	
-	public void revert(AttackCommand cmd) {		
-		RegionState regionFrom = region(cmd.from);
-		RegionState regionTo   = region(cmd.to);
+	public void revert(AttackCommand cmd) {
+        RegionState regionFrom = region(cmd.from);
+        RegionState regionTo   = region(cmd.to);
 
 		PlayerState attacker = regionFrom.owner;
 		PlayerState defender = player(cmd.toOwner);
 
 		// REVERT ARMIES
-		regionFrom.armies += cmd.armies;		
+		regionFrom.armies += cmd.armies;
 		regionTo.armies   -= cmd.armies - cmd.attackersCasaulties - cmd.defendersCasaulties;
-		
+
 		// REVERT PLAYER TOTAL ARMIES
 		attacker.totalArmies += cmd.attackersCasaulties;
 		defender.totalArmies += cmd.defendersCasaulties;
 		
 		// REVERT OWNER
 		if (cmd.attackersCasaulties < cmd.armies) {
-			// ATTACKERS WON		
+			// ATTACKERS WON
 			
 			// REVERT REGION OWNERSHIP
-			regionTo.owner = defender;			
+			regionTo.owner = defender;
 			attacker.regions.remove(regionTo.region);
 			defender.regions.put(regionTo.region, regionTo);
 			
 			// REVERT CONTINENT STATE
 			ContinentState continent = continent(regionTo.region.continent);
 			continent.owned.dec(attacker.player);
-			continent.owned.inc(defender.player);			
+			continent.owned.inc(defender.player);
 			updateContinentOwnership(continent);
-		}		
+		}
+
+        if (regionTo.armies < 1|| regionFrom.armies < 1) {
+            System.err.println("Invalid attack command revert");
+        }
 	}
 	
 	/**
@@ -629,7 +652,7 @@ public class GameState {
 		players[Player.OPPONENT.id] = newOpp;
 		
 		for (int i = 1; i < Continent.LAST_ID; ++i) {
-			continents[i].swapPlayer();			
+			continents[i].swapPlayer();
 		}
 		/* NO NEED TO DO THAT, region only contains reference to PlayerState, which we have already swapPlayer() for.
 		for (int i = 1; i < Region.LAST_ID; ++i) {
