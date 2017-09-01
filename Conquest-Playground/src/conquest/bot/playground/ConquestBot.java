@@ -165,7 +165,7 @@ public class ConquestBot extends GameBot
         if (myRegions.size()>NUMBER_OF_REGIONS) {
             bestRegions = new ArrayList<>(myRegions.subList(0, NUMBER_OF_REGIONS));
         } else {
-            bestRegions = new ArrayList<>(NUMBER_OF_REGIONS);
+            bestRegions = new ArrayList<>(myRegions.size());
             bestRegions.addAll(myRegions);
         }
         return bestRegions;
@@ -238,17 +238,19 @@ public class ConquestBot extends GameBot
         return result;
     }
 
-    private int getRegionScore(RegionState o1) {
+    private int getRegionScore(RegionState regionToScore) {
 	    final int NEUTRAL_WEIGHT = 2;
 	    final int ENEMY_WEIGHT = 5;
 	    final double ARMY_STRENGTH_WEIGHT = 0.5;
+	    final double OWN_ARMY_STRENGTH_WEIGHT = 0.5;
 		int result = 0;
 		
-		for (Region reg : o1.region.getNeighbours()) {
+		for (Region reg : regionToScore.region.getNeighbours()) {
 			result += (state.region(reg).owned(Player.NEUTRAL) ? 1 : 0) * NEUTRAL_WEIGHT;
 			result += (state.region(reg).owned(Player.OPPONENT) ? 1 : 0) * ENEMY_WEIGHT *
                                             Math.round(1 + ARMY_STRENGTH_WEIGHT * state.region(reg).armies);
 		}
+		result += regionToScore.armies * OWN_ARMY_STRENGTH_WEIGHT;
 		
 		return result;
 	}
@@ -294,8 +296,10 @@ public class ConquestBot extends GameBot
         coldRegions.removeAll(hotRegions);
         List<MoveCommand> transferCommands = generateTransferCommands(coldRegions, hotRegions);
         // each option must also bare the transfer commands
-        for (List<MoveCommand> option :options) {
-            option.addAll(transferCommands);
+        if (!transferCommands.isEmpty()) {
+            for (List<MoveCommand> option : options) {
+                option.addAll(transferCommands);
+            }
         }
 
         // return the best score achievable
@@ -319,7 +323,7 @@ public class ConquestBot extends GameBot
             List<RegionState> neighbours = new ArrayList<>(myRegion.neighbours.length);
             List<List<MoveCommand>> regionOptions = new ArrayList<>(myRegion.neighbours.length*2);
             final int availableArmies = myRegion.armies - 1;
-            if (availableArmies == 0) continue;
+            if (availableArmies < 2) continue;
             for (RegionState to : myRegion.neighbours) {
                 // DO NOT ATTACK OWN REGIONS
                 if (to.owned(Player.ME)) continue;
@@ -356,6 +360,7 @@ public class ConquestBot extends GameBot
         List<MoveCommand> result = new ArrayList<>();
 	    for (RegionState coldRegion : coldRegions) {
 	        // find closest hot regions
+            //MoveCommand newCommand = moveToFront(coldRegion);
             MoveCommand newCommand = moveToFront(coldRegion, hotRegions);
             if (newCommand == null) {
                 System.err.println("MoveToFront method failed to find way to front!");
@@ -461,31 +466,33 @@ public class ConquestBot extends GameBot
             double probability = 1;
             //System.err.println(moveCommands.size());
             //System.err.println(oponentMove.size());
-            GameState curState = new GameState(GameStateCompact.fromGameState(state));
+            //GameState curState = new GameState(GameStateCompact.fromGameState(state));
             // applying all attack commands to project the battle results
             for (int battleIndex = 0; battleIndex < battleResults.size(); battleIndex++) {
-                if (getNthBit(battleResCode, battleIndex)) {
+                if (!getNthBit(battleResCode, battleIndex)) {
                     for (AttackCommand attCmd : battleResults.get(battleIndex).getFirst().getResultCommand()) {
-                        curState.apply(attCmd);
+                        state.apply(attCmd);
                         probability *= battleResults.get(battleIndex).getFirst().getProbability();
                     }
                 } else {
                     for (AttackCommand attCmd : battleResults.get(battleIndex).getSecond().getResultCommand()) {
-                        curState.apply(attCmd);
+                        state.apply(attCmd);
                         probability *= battleResults.get(battleIndex).getSecond().getProbability();
                     }
                 }
             }
             if (depth > DEPTH_LIMIT) {
-                stateValue += probability * evaluateState(curState);
+                System.err.println("Depth limit reached");
+                stateValue += probability * evaluateState(state);
             } else {
-                stateValue += probability * computeBestArmiesPlacement(curState, depth+1);
+                System.err.println("Continuing into recursion");
+                stateValue += probability * computeBestArmiesPlacement(state, depth+1);
             }
 
             // revert applied commands
-            /*
+
             for (int battleIndex = battleResults.size()-1; battleIndex >= 0; battleIndex--) {
-                if (getNthBit(battleResCode, battleIndex)) {
+                if (!getNthBit(battleResCode, battleIndex)) {
                     for (AttackCommand attCmd : battleResults.get(battleIndex).getFirst().getResultCommand()) {
                         state.revert(attCmd);
                     }
@@ -494,7 +501,7 @@ public class ConquestBot extends GameBot
                         state.revert(attCmd);
                     }
                 }
-            }*/
+            }
         }
 
         for (PlaceCommand placeCmd : oponentPlace) state.revert(placeCmd);
@@ -547,18 +554,11 @@ public class ConquestBot extends GameBot
                 meArmies  = meArmies > 2 ? meArmies - 2 : 1;
                 break;
         }
-
+        // FIXME: !!!! This is wrong, one has to consider more the original ownership of the target region
         // from here we will be pessimistic and assume that the opponent will be the defending
         int meWinDeaths = (int) Math.round(aRes.getExpectedAttackersDeaths(meArmies, opoArmies));
         if (meWinDeaths > meArmies) meWinDeaths = meArmies -1;
-        int defWinDeaths = 0;
-        try {
-            defWinDeaths = (int) Math.round(dRes.getExpectedDefendersDeaths(meArmies, opoArmies));
-        } catch (NullPointerException e) {
-            System.err.println(meArmies);
-            System.err.println(opoArmies);
-            System.exit(1);
-        }
+        int defWinDeaths = (int) Math.round(dRes.getExpectedDefendersDeaths(meArmies, opoArmies));
         if (defWinDeaths > opoArmies) defWinDeaths = opoArmies -1;
 
         return new Pair<>(
@@ -653,20 +653,21 @@ public class ConquestBot extends GameBot
 
 	    // compute probability of winning and loosing
         int attWinDeaths = (int) Math.round(aRes.getExpectedAttackersDeaths(attArms, defArms));
-        if (attWinDeaths > attArms) attWinDeaths = attArms -1;
+        if (attWinDeaths > attArms) attWinDeaths = attArms;
+        double attWinChance = aRes.getAttackersWinChance(attArms, defArms);
 
         int defWinDeaths = (int) Math.round(dRes.getExpectedDefendersDeaths(attArms, defArms));
-        if (defWinDeaths > defArms) defWinDeaths = defArms -1;
+        if (defWinDeaths >= defArms) defWinDeaths = defArms -1;
 
         return new Pair<>(
-                new BattleResult(aRes.getAttackersWinChance(attArms, defArms),
+                new BattleResult(attWinChance,
                         new AttackCommand(
                                 moveCmd.from, state.region(moveCmd.from).owner.player,
                                 moveCmd.to, state.region(moveCmd.to).owner.player,
                                 moveCmd.armies,
                                 attWinDeaths,
                                 state.region(moveCmd.to).armies)),
-                new BattleResult(aRes.getDefendersWinChance(attArms, defArms),
+                new BattleResult(1-attWinChance,
                         new AttackCommand(
                                 moveCmd.from, state.region(moveCmd.from).owner.player,
                                 moveCmd.to, state.region(moveCmd.to).owner.player,
@@ -682,33 +683,48 @@ public class ConquestBot extends GameBot
 
 
     private Region moveToFrontRegion;
-	private MoveCommand moveToFront(RegionState from, List<RegionState> front) {
-		RegionBFS<BFSNode> bfs = new RegionBFS<>();
-		moveToFrontRegion = null;
-		bfs.run(from.region, (Region region, int level, BFSNode parent, BFSNode thisNode) -> {
-            //System.err.println((parent == null ? "START" : parent.level + ":" + parent.region) + " --> " + level + ":" + region);
-            if (front.contains(state.region(region))) {
-                moveToFrontRegion = region;
-                return new BFSVisitResult<>(BFSVisitResultType.TERMINATE, thisNode == null ? new BFSNode() : thisNode);
+    private MoveCommand moveToFront(RegionState from, List<RegionState> hotRegions) {
+        RegionBFS<BFSNode> bfs = new RegionBFS<>();
+        moveToFrontRegion = null;
+        bfs.run(from.region, new RegionBFS.BFSVisitor<BFSNode>() {
+
+            @Override
+            public BFSVisitResult<BFSNode> visit(Region region, int level, BFSNode parent, BFSNode thisNode) {
+                //System.err.println((parent == null ? "START" : parent.level + ":" + parent.region) + " --> " + level + ":" + region);
+                if (isFrontalRegion(region, hotRegions)) {
+                    moveToFrontRegion = region;
+                    return new BFSVisitResult<>(BFSVisitResultType.TERMINATE, thisNode == null ? new BFSNode() : thisNode);
+                }
+                return new BFSVisitResult<>(thisNode == null ? new BFSNode() : thisNode);
             }
-            return new BFSVisitResult<>(thisNode == null ? new BFSNode() : thisNode);
+
+            private boolean isFrontalRegion(Region from, List<RegionState> hotRegions) {
+                for (RegionState hotRegState : hotRegions) {
+                    if (hotRegState.region == from) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
         });
 
-		if (moveToFrontRegion != null) {
-			List<Region> path = bfs.getAllPaths(moveToFrontRegion).get(0);
-			Region moveTo = path.get(1);
+        if (moveToFrontRegion != null) {
+            //List<Region> path = fw.getPath(from.getRegion(), moveToFrontRegion);
+            List<Region> path = bfs.getAllPaths(moveToFrontRegion).get(0);
+            Region moveTo = path.get(1);
 
-			boolean first = true;
-			for (Region region : path) {
-				if (first) first = false;
-				else System.err.print(" --> ");
-				System.err.print(region);
-			}
-			System.err.println();
-			return transfer(from, state.region(moveTo));
-		}
-		return null;
-	}
+            boolean first = true;
+            for (Region region : path) {
+                if (first) first = false;
+                //else System.err.print(" --> ");
+                //System.err.print(region);
+            }
+            //System.err.println();
+            return transfer(from, state.region(moveTo));
+        }
+        return null;
+    }
 
 	
 	@SuppressWarnings("WeakerAccess")
