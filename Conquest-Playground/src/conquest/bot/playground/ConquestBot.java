@@ -101,7 +101,7 @@ public class ConquestBot extends GameBot
         List<PlaceCommand> bestCommands = null;
         double bestScore = Integer.MIN_VALUE;
         for (List<PlaceCommand> commands : options) {
-            double score = evaluatePlaceCommands(new GameState(GameStateCompact.fromGameState(state)), 0, commands);
+            double score = evaluatePlaceCommands(new GameState(GameStateCompact.fromGameState(state)), 0, commands, Integer.MIN_VALUE, Integer.MAX_VALUE);
             if (score > bestScore) {
                 bestScore = score;
                 bestCommands = commands;
@@ -126,19 +126,21 @@ public class ConquestBot extends GameBot
             };
     }
 
-    private double computeBestArmiesPlacement(GameState state, int depth) {
-	    // TODO: add alpha-beta prunning
-
-        // explore all the various placement options: all to one; all equally; two equally ==> 7 options
+    private double computeBestArmiesPlacement(GameState state, int depth, double alpha, double beta) {
         List<List<PlaceCommand>> options = getAllPlacementOpts(state, getInterestingRegions(state, 2));
 
-        //List<PlaceCommand> bestCommands = null;
         double bestScore = Integer.MIN_VALUE;
         for (List<PlaceCommand> commands : options) {
-            double score = evaluatePlaceCommands(state, depth, commands);
+            double score = evaluatePlaceCommands(state, depth, commands, alpha, beta);
             if (score > bestScore) {
                 bestScore = score;
-                //bestCommands = commands;
+            }
+            if (score > alpha) {
+                alpha = score;
+            }
+            if (beta <= alpha) {
+                //System.err.println("Pruned!");
+                break;
             }
         }
         // return the best one
@@ -153,13 +155,20 @@ public class ConquestBot extends GameBot
         return getTopRegions(myRegions, numOfRegions);
     }
 
+    /**
+     * explore all the various placement options: all to one; all equally; two equally ==> 7 options for bestRegions == 3
+     * @param state current state
+     * @param bestRegions interesting regions
+     * @return list of relevant combinations of placement commands
+     */
     private List<List<PlaceCommand>> getAllPlacementOpts(GameState state, List<RegionState> bestRegions) {
         List<List<PlaceCommand>> options = new ArrayList<>(7);
         options.addAll(createAllArmsToOneRegCommands(bestRegions,state));
+        /* distributing armies other than all in one region removed for the sake of complexity
         options.add(createUniformAmrsCommands(state, bestRegions));
         if (bestRegions.size()>2) {
             options.addAll(createAllArmsToSubsetRegCommands(state, bestRegions));
-        }
+        }*/
         return options;
     }
 
@@ -174,7 +183,7 @@ public class ConquestBot extends GameBot
         return bestRegions;
     }
 
-    private double evaluatePlaceCommands(final GameState state, int depth, List<PlaceCommand> placeCommands) {
+    private double evaluatePlaceCommands(final GameState state, int depth, List<PlaceCommand> placeCommands, double alpha, double beta) {
 	    // applying place commands here, since there's no relevance in their order and we need to know their effect
         // so we can move the newly placed armies
 
@@ -183,7 +192,7 @@ public class ConquestBot extends GameBot
         }
 
         // evaluate
-        double result = computeBestArmiesMovement(state, depth);
+        double result = computeBestArmiesMovement(state, depth, alpha, beta);
 
         for (PlaceCommand cmd : placeCommands) {
             state.revert(cmd);
@@ -230,12 +239,14 @@ public class ConquestBot extends GameBot
         List<List<PlaceCommand>> result = new ArrayList<>(3);
         for (RegionState bestRegion : bestRegions) {
             int armiesLeft = state.me.placeArmies;
-            List<PlaceCommand> commands = new ArrayList<>(armiesLeft / 3 + 1);
+            List<PlaceCommand> commands = Collections.singletonList(new PlaceCommand(bestRegion.region, armiesLeft));
+            /*new ArrayList<>(armiesLeft / 3 + 1);
             while (armiesLeft >= 3) {
                 commands.add(new PlaceCommand(bestRegion.region, 3));
                 armiesLeft -= 3;
             }
             commands.add(new PlaceCommand(bestRegion.region, armiesLeft));
+            */
             result.add(commands);
         }
         return result;
@@ -280,16 +291,18 @@ public class ConquestBot extends GameBot
         List<MoveCommand> bestCommands = null;
         double bestScore = Integer.MIN_VALUE;
         for (List<MoveCommand> commands : options) {
-            double score = evaluateMoveCommands(new GameState(GameStateCompact.fromGameState(state)), 0, commands);
+            if (commands.size() == 0) continue;
+            double score = evaluateMoveCommands(new GameState(GameStateCompact.fromGameState(state)), 0, commands, Integer.MIN_VALUE, Integer.MAX_VALUE);
             if (score > bestScore) {
                 bestScore = score;
                 bestCommands = commands;
             }
         }
+        System.err.println(String.format("Returning %d move commands", bestCommands.size()));
         return bestCommands;
 	}
 
-    private double computeBestArmiesMovement(final GameState state, int depth) {
+    private double computeBestArmiesMovement(final GameState state, int depth, double alpha, double beta) {
         List<RegionState> hotRegions = getInterestingRegions(state, 3);
 
         List<List<MoveCommand>> options = generateMoveOptions(hotRegions);
@@ -309,10 +322,16 @@ public class ConquestBot extends GameBot
         //List<MoveCommand> bestCommands = null;
         double bestScore = Integer.MIN_VALUE;
         for (List<MoveCommand> commands : options) {
-            double score = evaluateMoveCommands(state, depth, commands);
+            double score = evaluateMoveCommands(state, depth, commands, alpha, beta);
             if (score > bestScore) {
                 bestScore = score;
-                //bestCommands = commands;
+            }
+            if (score > alpha) {
+                alpha = score;
+            }
+            if (beta <= alpha) {
+                //System.err.println("Pruned!");
+                break;
             }
         }
 
@@ -320,13 +339,16 @@ public class ConquestBot extends GameBot
     }
 
     private List<List<MoveCommand>> generateMoveOptions(List<RegionState> hotRegions) {
+        final int MIN_ARMY_SIZE = 4;
+        final int MIN_HALF_ARMY_SIZE = 10;
+
         List<List<List<MoveCommand>>> allRegionOptions = new ArrayList<>(hotRegions.size());
         // evaluate them
         for (RegionState myRegion : hotRegions) {
             List<RegionState> neighbours = new ArrayList<>(myRegion.neighbours.length);
             List<List<MoveCommand>> regionOptions = new ArrayList<>(myRegion.neighbours.length*2);
             final int availableArmies = myRegion.armies - 1;
-            if (availableArmies < 2) continue;
+            if (availableArmies < MIN_ARMY_SIZE) continue;
             for (RegionState to : myRegion.neighbours) {
                 // DO NOT ATTACK OWN REGIONS
                 if (to.owned(Player.ME)) continue;
@@ -340,7 +362,7 @@ public class ConquestBot extends GameBot
 
             // doubles
             int halfArmy = Math.floorDiv(availableArmies, 2);
-            if (halfArmy > 2) {
+            if (halfArmy > MIN_HALF_ARMY_SIZE) {
                 for (int regIndex = 0; regIndex < neighbours.size()-1; regIndex++) {
                     for (int restIndex = regIndex+1; restIndex < neighbours.size(); restIndex++) {
                         regionOptions.add(Arrays.asList(
@@ -363,10 +385,9 @@ public class ConquestBot extends GameBot
         List<MoveCommand> result = new ArrayList<>();
 	    for (RegionState coldRegion : coldRegions) {
 	        // find closest hot regions
-            //MoveCommand newCommand = moveToFront(coldRegion);
             MoveCommand newCommand = moveToFront(coldRegion, hotRegions);
             if (newCommand == null) {
-                System.err.println("MoveToFront method failed to find way to front!");
+                //System.err.println("MoveToFront method failed to find way to front!");
             } else {
                 result.add(newCommand);
             }
@@ -377,12 +398,10 @@ public class ConquestBot extends GameBot
 
     private void generatePermutations(List<List<List<MoveCommand>>> Lists, List<List<MoveCommand>> result, int depth, List<MoveCommand> current)
     {
-
         if(depth == Lists.size()) {
             result.add(new ArrayList<>(current));
             return;
         }
-
         for(int i = 0; i < Lists.get(depth).size(); ++i) {
             current.addAll(Lists.get(depth).get(i));
             generatePermutations(Lists, result, depth + 1, current);
@@ -390,11 +409,11 @@ public class ConquestBot extends GameBot
         }
     }
 
-    private double evaluateMoveCommands(final GameState state, int depth, List<MoveCommand> moveCommands) {
-        return computeOpponentMove(state, depth, moveCommands);
+    private double evaluateMoveCommands(final GameState state, int depth, List<MoveCommand> moveCommands, double alpha, double beta) {
+        return computeOpponentMove(state, depth, moveCommands, alpha, beta);
     }
 
-    private double computeOpponentMove(final GameState state, int depth, List<MoveCommand> moveCommands) {
+    private double computeOpponentMove(final GameState state, int depth, List<MoveCommand> moveCommands, double alpha, double beta) {
 
 	    GameState stateForOpp = new GameState(GameStateCompact.fromGameState(state));
 	    stateForOpp.swapPlayers();
@@ -423,9 +442,18 @@ public class ConquestBot extends GameBot
 
             for (List<MoveCommand> moveOption : moveOptions) {
                 double score = runSimulator(state, depth, moveCommands, placeOption,
-                        moveOption.stream().filter(moveCommand -> moveCommand.armies > 0).collect(Collectors.toList()));
-                if (score < bestScore)
+                        moveOption.stream().filter(moveCommand -> moveCommand.armies > 0).collect(Collectors.toList()),
+                        alpha, beta);
+                if (score < bestScore) {
                     bestScore = score;
+                }
+                if (beta < score) {
+                    beta = score;
+                }
+                if (beta <= alpha) {
+                    //System.err.println("Pruned!");
+                    break;
+                }
             }
 
             for (PlaceCommand placeCmd : placeOption) stateForOpp.revert(placeCmd);
@@ -434,6 +462,8 @@ public class ConquestBot extends GameBot
     }
 
     /*
+    version of opponent move relying on smartBot. I encountered some problems with reversing the states given
+    the commands from SmartBot, hence this version was abandoned
     private double computeOpponentMove(final GameState state, int depth, List<MoveCommand> moveCommands) {
         // simulate opponent move
         final int IGNORED_TIMEOUT = 0;
@@ -459,7 +489,7 @@ public class ConquestBot extends GameBot
 
 
     private double runSimulator(GameState state, int depth, List<MoveCommand> moveCommands,
-                             List<PlaceCommand> oponentPlace, List<MoveCommand> oponentMove) {
+                                List<PlaceCommand> oponentPlace, List<MoveCommand> oponentMove, double alpha, double beta) {
         state = new GameState(GameStateCompact.fromGameState(state));
         Map<Region, List<MoveCommand>> destinationRegMap = new HashMap<>();
         List<MoveCommand> toBeRemovedOpp = new ArrayList<>();
@@ -493,7 +523,10 @@ public class ConquestBot extends GameBot
             // get commands that lead to battles on my side
             if (!state.region(myMove.to).owned(Player.ME)) {
                 // create various attack command (= battle results)
-                battleResults.add(createBattleResults(state, myMove));
+                Pair<BattleResult, BattleResult> res = createBattleResults(state, myMove);
+                if (res != null) {
+                    battleResults.add(res);
+                }
                 toBeRemovedMe.add(myMove);
             }
         }
@@ -502,7 +535,10 @@ public class ConquestBot extends GameBot
         // same for the opponent
         for (MoveCommand opoMove : oponentMove) {
             if (!state.region(opoMove.to).owned(Player.OPPONENT)) {
-                battleResults.add(createBattleResults(state, opoMove));
+                Pair<BattleResult, BattleResult> res = createBattleResults(state, opoMove);
+                if (res != null) {
+                    battleResults.add(res);
+                }
                 toBeRemovedOpp.add(opoMove);
             }
         }
@@ -542,10 +578,12 @@ public class ConquestBot extends GameBot
                 //System.err.println("Depth limit reached, " + battleResCode);
                 stateValue += probability * evaluateState(state);
             } else {
-                if (depth == 0)
+                if (depth == 0) // debug output
                     System.err.println("Code: " + battleResCode);
-                //System.err.println("Continuing into recursion");
-                stateValue += probability * computeBestArmiesPlacement(state, depth+1);
+                if (probability > 0.001) {
+                    //System.err.println("Pruned based on low probability");
+                    stateValue += probability * computeBestArmiesPlacement(state, depth + 1, alpha, beta);
+                }
             }
 
             // revert applied commands
@@ -726,8 +764,8 @@ public class ConquestBot extends GameBot
 	    //System.err.println(String.format("defArms: %d ; attArms: %d", defArms, attArms));
 
 	    if (defArms < 1 || attArms < 1) {
-	        // FIXME: this fires a lot, maybe fix somehow...
 	        //System.err.println("O def or att arms");
+            return null;
         }
 
 	    // compute probability of winning and loosing
@@ -743,14 +781,14 @@ public class ConquestBot extends GameBot
                         new AttackCommand(
                                 moveCmd.from, state.region(moveCmd.from).owner.player,
                                 moveCmd.to, state.region(moveCmd.to).owner.player,
-                                moveCmd.armies,
+                                attArms,
                                 attWinDeaths,
-                                state.region(moveCmd.to).armies)),
+                                defArms)),
                 new BattleResult(1-attWinChance,
                         new AttackCommand(
                                 moveCmd.from, state.region(moveCmd.from).owner.player,
                                 moveCmd.to, state.region(moveCmd.to).owner.player,
-                                moveCmd.armies,
+                                attArms,
                                 attArms,
                                 defWinDeaths
                         )));
@@ -765,16 +803,13 @@ public class ConquestBot extends GameBot
         return new MoveCommand(from.region, to.region, from.armies-1);
 	}
 
-
     private Region moveToFrontRegion;
     private MoveCommand moveToFront(RegionState from, List<RegionState> hotRegions) {
         RegionBFS<BFSNode> bfs = new RegionBFS<>();
         moveToFrontRegion = null;
         bfs.run(from.region, new RegionBFS.BFSVisitor<BFSNode>() {
-
             @Override
             public BFSVisitResult<BFSNode> visit(Region region, int level, BFSNode parent, BFSNode thisNode) {
-                //System.err.println((parent == null ? "START" : parent.level + ":" + parent.region) + " --> " + level + ":" + region);
                 if (isFrontalRegion(region, hotRegions)) {
                     moveToFrontRegion = region;
                     return new BFSVisitResult<>(BFSVisitResultType.TERMINATE, thisNode == null ? new BFSNode() : thisNode);
@@ -790,22 +825,14 @@ public class ConquestBot extends GameBot
                 }
                 return false;
             }
-
         });
 
         if (moveToFrontRegion != null) {
-            //List<Region> path = fw.getPath(from.getRegion(), moveToFrontRegion);
             List<Region> path = bfs.getAllPaths(moveToFrontRegion).get(0);
             Region moveTo = path.get(1);
-
-            boolean first = true;
-            for (Region region : path) {
-                if (first) first = false;
-                //else System.err.print(" --> ");
-                //System.err.print(region);
+            if (state.region(moveTo).owner.player == Player.ME) {
+                return transfer(from, state.region(moveTo));
             }
-            //System.err.println();
-            return transfer(from, state.region(moveTo));
         }
         return null;
     }

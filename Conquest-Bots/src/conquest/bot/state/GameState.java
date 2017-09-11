@@ -496,7 +496,7 @@ public class GameState {
 		region.owner.totalArmies -= cmd.armies;
 
 		if (region.armies < 1) {
-		    //System.err.println("Invalid place command revert");
+		    System.err.println("Invalid place command revert");
         }
 	}
 	
@@ -511,7 +511,7 @@ public class GameState {
 		to.owner.totalArmies += cmd.armies;
 
 		if (to.armies < 1 || from.armies < 1) {
-		    System.err.println("Invalid move command");
+		    System.err.println(String.format("Invalid move command: %s -> %d -> %s", from.toString(), cmd.armies, to.toString()));
         }
 	}
 	
@@ -526,7 +526,7 @@ public class GameState {
 		to.owner.totalArmies -= cmd.armies;
 
         if (to.armies < 1 || from.armies < 1) {
-            //System.err.println("Invalid move command");
+            System.err.println("Invalid move command revert");
         }
 	}
 	
@@ -631,7 +631,7 @@ public class GameState {
 		}
 
         if (regionTo.armies < 1|| regionFrom.armies < 1) {
-            //System.err.println("Invalid attack command revert");
+            System.err.println("Invalid attack command revert");
         }
 	}
 	
