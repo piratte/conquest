@@ -346,21 +346,33 @@ public class ConquestBot extends GameBot
         // evaluate them
         for (RegionState myRegion : hotRegions) {
             List<RegionState> neighbours = new ArrayList<>(myRegion.neighbours.length);
+            List<RegionState> enemyNeighbours = new ArrayList<>(myRegion.neighbours.length);
             List<List<MoveCommand>> regionOptions = new ArrayList<>(myRegion.neighbours.length*2);
             final int availableArmies = myRegion.armies - 1;
             if (availableArmies < MIN_ARMY_SIZE) continue;
             for (RegionState to : myRegion.neighbours) {
                 // DO NOT ATTACK OWN REGIONS
                 if (to.owned(Player.ME)) continue;
-                neighbours.add(to);
+                if (to.owned(Player.OPPONENT)) {
+                    enemyNeighbours.add(to);
+                } else {
+                    neighbours.add(to);
+                }
             }
             // make commands for regions and doubles of regs
             // singles
-            for (RegionState neighbour : neighbours) {
-                regionOptions.add(singletonList(new MoveCommand(myRegion.region, neighbour.region, availableArmies)));
+            if (!enemyNeighbours.isEmpty()) {
+                for (RegionState neighbour : enemyNeighbours) {
+                    regionOptions.add(singletonList(new MoveCommand(myRegion.region, neighbour.region, availableArmies)));
+                }
+            } else {
+                for (RegionState neighbour : neighbours) {
+                    regionOptions.add(singletonList(new MoveCommand(myRegion.region, neighbour.region, availableArmies)));
+                }
             }
 
             // doubles
+            /* pruned for the sake of complexity
             int halfArmy = Math.floorDiv(availableArmies, 2);
             if (halfArmy > MIN_HALF_ARMY_SIZE) {
                 for (int regIndex = 0; regIndex < neighbours.size()-1; regIndex++) {
@@ -372,6 +384,7 @@ public class ConquestBot extends GameBot
                     }
                 }
             }
+            */
             allRegionOptions.add(regionOptions);
         }
 
@@ -750,7 +763,7 @@ public class ConquestBot extends GameBot
             originalState.revert(commands.get(i));
         }
         if (!state.toString().equalsIgnoreCase(originalState.toString()))
-	        System.err.println("Yay!");*/
+	        System.err.println("States are not the same!!");*/
     }
 
     private Player getIssuer(GameState state, MoveCommand cmd) {
